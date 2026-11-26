@@ -4,7 +4,7 @@
 
 --- /dev/null
 +++ b/third_party/ublock/README.chromium
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,20 @@
 +Name: uBlock Origin
 +Short Name: ublock
 +URL: https://github.com/gorhill/uBlock
@@ -18,11 +18,13 @@
 +uBlock Origin - An efficient blocker for Chromium and Firefox. Fast and lean.
 +Bundled in Nadhr as a component extension. The official release package is
 +downloaded and checked against its SHA-256 by the Nadhr build
-+(platforms/<os>/downloads.ini).
++(downloads.ini in the Nadhr repository).
 +
 +Local Modifications:
 +The Nadhr build adds a "key" to manifest.json so that the extension has a
-+stable ID (see components/nadhr/ublock_ids.h). No other changes.
++stable ID (see components/nadhr/ublock_ids.h), and sets which filter lists are
++on by default in assets/assets.json according to Nadhr's licence review
++(resources/ublock/default_lists.json). No code is changed.
 --- /dev/null
 +++ b/third_party/ublock/BUILD.gn
 @@ -0,0 +1,57 @@

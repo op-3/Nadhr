@@ -52,5 +52,53 @@ class PrepareTest(unittest.TestCase):
             prepare_ublock.prepare(self._manifest(3))
 
 
+class DefaultListsTest(unittest.TestCase):
+
+    POLICY = {'approved': {'good': {}, 'good-regional': {}},
+              'off_pending_review': {'ambiguous': 'reason'}}
+
+    def _run(self, assets):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        path = Path(tmp.name)
+        (path / 'assets').mkdir()
+        (path / 'assets' / 'assets.json').write_text(json.dumps(assets), encoding='utf-8')
+        result = prepare_ublock.apply_default_lists(path, self.POLICY)
+        return result, json.loads((path / 'assets' / 'assets.json').read_text(encoding='utf-8'))
+
+    def test_only_approved_lists_stay_on(self):
+        (enabled, disabled), out = self._run({
+            'good': {'content': 'filters'},
+            'good-regional': {'content': 'filters', 'off': True, 'lang': 'ar'},
+            'ambiguous': {'content': 'filters'},
+            'unreviewed-regional': {'content': 'filters', 'off': True, 'lang': 'de', 'ua': 'x'},
+            'public-suffix': {'content': 'internal'},
+        })
+        self.assertNotIn('off', out['good'])
+        self.assertEqual(out['good-regional']['lang'], 'ar')  # still auto-selected for Arabic
+        self.assertTrue(out['ambiguous']['off'])
+        self.assertTrue(out['unreviewed-regional']['off'])
+        self.assertNotIn('lang', out['unreviewed-regional'])
+        self.assertNotIn('ua', out['unreviewed-regional'])
+        self.assertEqual(out['public-suffix'], {'content': 'internal'})
+        self.assertEqual(enabled, ['good', 'good-regional'])
+        self.assertEqual(disabled, ['ambiguous', 'unreviewed-regional'])
+
+    def test_new_unreviewed_default_list_fails_the_build(self):
+        with self.assertRaisesRegex(RuntimeError, 'has not been reviewed'):
+            self._run({'good': {'content': 'filters'}, 'good-regional': {'content': 'filters'},
+                       'brand-new': {'content': 'filters', 'title': 'New list'}})
+
+    def test_renamed_approved_list_fails_the_build(self):
+        with self.assertRaisesRegex(RuntimeError, 'missing'):
+            self._run({'good': {'content': 'filters'}})
+
+    def test_repository_policy_is_consistent(self):
+        policy = json.loads(prepare_ublock.LIST_POLICY_FILE.read_text(encoding='utf-8'))
+        self.assertFalse(set(policy['approved']) & set(policy['off_pending_review']))
+        for key, entry in policy['approved'].items():
+            self.assertTrue(entry.get('licence') and entry.get('evidence'), key)
+
+
 if __name__ == '__main__':
     unittest.main()
