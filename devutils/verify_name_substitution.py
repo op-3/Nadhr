@@ -81,6 +81,20 @@ def main():
                      if ns.replace_name(m) != m]
         failures += [f'product mention left: {m.strip()}' for m in leftovers]
 
+        # Arabic: the native name, in logical order, and never the Latin name.
+        ar_xtb = next(x for x, lang in xtbs if lang == 'ar')
+        ar_text = ar_xtb.read_text(encoding='utf-8')
+        ar_hits = ar_text.count(ns.ARABIC_PRODUCT)
+        reversed_name = ns.ARABIC_PRODUCT[::-1]
+        if ar_hits == 0:
+            failures.append('ar: Arabic product name not found in translations')
+        if reversed_name in ar_text:
+            failures.append('ar: visually reversed product name found')
+        if ns.PRODUCT in ar_text:
+            failures.append('ar: Latin product name used instead of the Arabic one')
+        print(f'ar: {ar_hits} occurrences of U+0646 U+0638 U+0631 (logical order); '
+              f'reversed sequence: {ar_text.count(reversed_name)}')
+
         print(f'{len(xtbs)} locales, {sum(counts.values())} translations checked')
         if failures:
             print('\n'.join(failures))

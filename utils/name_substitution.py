@@ -23,7 +23,11 @@ from pathlib import Path
 
 PRODUCT = 'Nadhr'
 # Locales whose translations use the native product name.
-LOCALIZED_PRODUCT = {'ar': 'نظر'}
+# Arabic: نظر in logical (reading) order, NOON + ZAH + REH. Written as escapes so
+# that no editor or terminal without bidi support can reorder it; the UI's bidi
+# algorithm renders it right-to-left. Never store it visually reversed.
+ARABIC_PRODUCT = 'نظر'
+LOCALIZED_PRODUCT = {'ar': ARABIC_PRODUCT}
 
 # Mentions that refer to the upstream project, not the product. They keep
 # the name "Chromium".
