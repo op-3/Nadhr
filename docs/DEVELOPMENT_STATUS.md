@@ -16,13 +16,23 @@ verified. It gives no completion percentages.
 | Identity patches: product name, Windows install identity, policy namespace | `devutils/validate_patches.py --remote` applies all three cleanly to 158.0.8127.88. A negative test (corrupted context line) fails as expected. |
 | No upstream patch touches the same files as Nadhr's patches | validator's "stack under test" output |
 | Windows build driver adapted to the layered patch stack | `platforms/windows/build.py` (imports and argument parsing checked; a full build is **not yet run**) |
-| CI: patch validation workflow, 16-stage Windows build workflow, Dependabot | `.github/` |
+| CI: patch validation workflow, 16-stage Windows build workflow, Dependabot | `.github/`. `validate` passed on GitHub (run 45886591706). |
+| Repository published at https://github.com/op-3/Nadhr. History audited before publishing (no credentials, keys or binaries; commit email set to the GitHub no-reply address). | 2026-11-26 |
+| Launch smoke test script | `devutils/smoke_test.py`. Checked against Microsoft Edge as a control: page and JavaScript check passes, branding check correctly fails. |
+| UI string branding with translation-safe fingerprint re-keying (English "Nadhr", Arabic "نظر") | `devutils/verify_name_substitution.py`: 81 locales, 68,607 translations, none lost. Negative control fails as expected. |
 
 ## In progress
 
-- First full Windows build (CI and/or local). **No Nadhr binary exists yet.**
-- Local Windows toolchain: Visual Studio 2022 C++ workload and Windows SDK 10.0.28000.0 are
-  not installed on the primary development machine yet.
+- First full Windows CI build: run 45886835192, started 2026-11-26 from commit
+  1a00986 (identity patches only, before name substitution).
+  **No Nadhr binary exists yet.**
+
+## Owner decisions
+
+- 2026-11-26: full Chromium builds run on GitHub Actions only (free tier,
+  no paid runners). No Visual Studio, Windows SDK or Chromium tree on the
+  development laptop. Local work is limited to source changes, patch validation
+  and lightweight tests.
 
 ## Not started
 

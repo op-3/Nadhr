@@ -7,6 +7,8 @@
 | Patch series consistency | `devutils/validate_patches.py` | every listed patch exists, every patch is listed, no duplicates |
 | Patches apply to the pinned release | `devutils/validate_patches.py --remote`, CI `validate` | Nadhr's patches, plus any upstream patch touching the same files, apply in build order to Chromium at the pinned tag |
 | Python sources compile | CI `validate` | build scripts have no syntax errors |
+| Name substitution unit tests | `utils/tests`, CI `validate` | product mentions are renamed, upstream-project mentions ("The Chromium Authors", "Chromium OS", the credits link) are kept, and only changed messages' translations are re-keyed |
+| Name substitution on real strings | `devutils/verify_name_substitution.py`, CI `validate` | on Chromium's real `chromium_strings.grd` and all 81 locales (68,607 translations): the fingerprint computation matches every shipped translation ID, no translation is lost after renaming, and no English product mention remains. Negative control: with re-keying disabled, it reports 563 lost translations per locale. |
 | Full Windows build | CI `build-windows` | the patched tree compiles and packages (**not yet run successfully**) |
 | Launch smoke test | `devutils/smoke_test.py`, CI `build-windows` → `smoke-test` | the packaged browser starts headless with a fresh profile, loads a page over HTTP, runs JavaScript, and its executable is branded Nadhr. Transcript uploaded as `smoke-test-evidence`. The script was checked against Microsoft Edge as a control: JavaScript check passes, branding check correctly fails. |
 

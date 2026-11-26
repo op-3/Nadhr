@@ -19,6 +19,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Python sources compile
-        run: python -m compileall -q devutils platforms
+        run: python -m compileall -q devutils platforms utils
+      - name: Unit tests
+        run: python -m unittest discover -s utils/tests -v
+      - name: Name substitution keeps every translation (real Chromium strings)
+        run: python devutils/verify_name_substitution.py
       - name: Nadhr patches apply to the pinned Chromium release
         run: python devutils/validate_patches.py --platform windows --remote

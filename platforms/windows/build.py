@@ -149,6 +149,10 @@ def prepare_source(args):
         patches.apply_patches(patches.generate_patches_from_series(layer, resolve=True),
                               SOURCE_TREE, patch_bin_path=SOURCE_TREE / PATCH_BIN_RELPATH)
 
+    get_logger().info('Replacing the product name in UI strings...')
+    subprocess.run([sys.executable, str(ROOT / 'utils' / 'name_substitution.py'),
+                    str(SOURCE_TREE)], check=True)
+
     substitution_list = (UC if args.tarball else UC_WIN) / 'domain_substitution.list'
     domain_substitution.apply_substitution(UC / 'domain_regex.list', substitution_list,
                                            SOURCE_TREE, None)

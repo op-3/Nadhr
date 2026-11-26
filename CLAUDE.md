@@ -25,6 +25,9 @@ finished or found broken.
 - `platforms/windows/build.py`, `package.py`: Windows build (adapted from
   ungoogled-chromium-windows).
 - `devutils/validate_patches.py`: run `--remote` after any patch change.
+- `utils/name_substitution.py`: build-time rename of "Chromium" in GRIT strings,
+  re-keying translations. Verified by `devutils/verify_name_substitution.py`.
+- `devutils/smoke_test.py`: launches a built browser; runs in CI after the build.
 - `.github/workflows/validate.yml`: fast checks. `build-windows.yml`: 16-stage
   CI build (manual dispatch or `v*` tag).
 
@@ -44,5 +47,11 @@ Patches with CRLF will not apply.
 ## Environment (2026-11-26)
 
 Windows 11, i7-1265U, 31.6 GB RAM, about 142 GB free. `gh` is authenticated as
-`op-3`. Visual Studio C++ workload and SDK 10.0.28000.0 are not installed yet.
-Full builds run on GitHub Actions (free for public repositories).
+`op-3`. Commits use the GitHub no-reply email (repo-local git config). Never
+publish the owner's personal email.
+
+**Owner decision:** never install Visual Studio or the Windows SDK, and never
+download a Chromium tree on this laptop. Full builds run only on GitHub Actions
+(free tier; no paid runners without approval). Verify locally with
+`devutils/validate_patches.py --remote`, `devutils/verify_name_substitution.py`
+and `python -m unittest discover -s utils/tests`.

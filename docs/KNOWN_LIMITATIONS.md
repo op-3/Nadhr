@@ -6,9 +6,11 @@ Every known gap, honestly stated. Remove an entry only when it is fixed and veri
 
 - **No build has been produced yet.** Nadhr is pre-alpha.
 - Windows only for now. Linux and macOS builds are not wired up.
-- Branding covers the product name and Windows identity only. Many UI strings
-  (`chrome/app/chromium_strings.grd`, about 750 mentions), the icons and the
-  `chrome://` pages still say "Chromium".
+- UI strings: "Chromium" is replaced in GRIT strings by `utils/name_substitution.py`
+  (verified on `chromium_strings.grd` in all locales; **not yet seen in a built
+  browser**). Still unbranded: the icons and logos, the executable name
+  (`chrome.exe`), the internal `chrome://` scheme, and strings that say "Chrome"
+  (not "Chromium"), which have not been reviewed yet.
 
 ## Windows identity
 
