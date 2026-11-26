@@ -49,6 +49,32 @@ Nadhr patch areas:
 | `nadhr/branding` | product and company names (`BRANDING`) |
 | `nadhr/policy` | enterprise policy namespace: registry key, template names, Linux policy path |
 | `nadhr/windows` | Windows install identity: user data dir, ProgIDs, registry roots, COM/Active Setup IDs |
+| `nadhr/ublock` | bundled uBlock Origin: resource pak, component loading, **restricted (non-component) privileges**, localisation from the pak |
+
+### Bundled uBlock Origin
+
+The official uBlock Origin release (Manifest V2, the full version, not Lite)
+is pinned with its SHA-256 in [`downloads.ini`](../downloads.ini), unpacked to
+`third_party/ublock`, and compiled into its own resource pak. It is loaded as
+a component extension, so it is present and enabled from first run with no
+install step, and it is updated together with the browser.
+
+Component extensions are normally trusted by Chromium. They can script
+restricted pages, use `chrome://` resources, and every API is granted to them.
+uBlock Origin executes third-party filter lists, so
+`restrict-component-privileges.patch` removes those powers for it alone. It
+gets the same privileges as a normal installed extension, the user can disable
+it, and in incognito it follows the user's setting.
+
+Its extension ID is `mhmkochafbhohfaebfieaalahinnplkb`, derived from a
+Nadhr-owned public key (`resources/ublock/manifest_key.txt`). No private key
+exists, because component extensions are never signed. A Nadhr-specific ID
+avoids colliding with a user-installed copy from the Chrome Web Store.
+
+The integration is adapted from Helium's patches (GPL-3.0), with two
+deliberate differences. Helium's global `ResourceBundle` change for empty
+resources is not taken, and loading messages from the resource pak is limited
+to the uBlock component.
 
 Rules for Nadhr patches:
 

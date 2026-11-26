@@ -24,7 +24,7 @@ Expected entries:
 | Request | Purpose | Default | Control |
 |---|---|---|---|
 | Update check | security updates | on, to be decided with the updater design | setting and policy |
-| Filter list updates | content blocking | on | uBlock Origin settings |
+| Filter list updates (once the built-in uBlock Origin ships) | content blocking: uBlock Origin downloads its filter lists from the list maintainers' servers and mirrors (for example GitHub and jsDelivr). The requests contain no Nadhr identifier. | on | uBlock Origin dashboard → Filter lists (auto-update), or remove lists |
 
 ## Planned controls
 

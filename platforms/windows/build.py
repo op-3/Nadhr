@@ -150,6 +150,15 @@ def prepare_source(args):
             path.mkdir()
     downloads.unpack_downloads(win_info, DOWNLOAD_CACHE, None, SOURCE_TREE, extractors)
 
+    get_logger().info('Downloading Nadhr dependencies (uBlock Origin)...')
+    nadhr_info = downloads.DownloadInfo([ROOT / 'downloads.ini'])
+    downloads.retrieve_downloads(nadhr_info, DOWNLOAD_CACHE, None, True,
+                                 args.disable_ssl_verification)
+    downloads.check_downloads(nadhr_info, DOWNLOAD_CACHE, None)  # raises on hash mismatch
+    downloads.unpack_downloads(nadhr_info, DOWNLOAD_CACHE, None, SOURCE_TREE, extractors)
+    subprocess.run([sys.executable, str(ROOT / 'utils' / 'prepare_ublock.py'),
+                    str(SOURCE_TREE / 'third_party' / 'ublock')], check=True)
+
     for layer in (UC / 'patches', UC_WIN / 'patches', ROOT / 'patches'):
         get_logger().info('Applying patches from %s', layer.relative_to(ROOT))
         patches.apply_patches(patches.generate_patches_from_series(layer, resolve=True),

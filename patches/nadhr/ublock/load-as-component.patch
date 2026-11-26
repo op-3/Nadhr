@@ -1,0 +1,111 @@
+# Nadhr: load bundled uBlock Origin as a component extension, so it is present
+# and enabled from first run without an install step.
+# Adapted from Helium's ublock-install-as-component.patch (GPL-3.0). Helium's
+# global ResourceBundle change for empty resources is intentionally omitted.
+
+--- /dev/null
++++ b/components/nadhr/ublock_ids.h
+@@ -0,0 +1,22 @@
++// Copyright 2025 The Helium Authors
++// Copyright 2026 The Nadhr Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#ifndef COMPONENTS_NADHR_UBLOCK_IDS_H_
++#define COMPONENTS_NADHR_UBLOCK_IDS_H_
++
++namespace nadhr {
++
++// ID of the bundled uBlock Origin component, derived from the public key that
++// the build writes into its manifest (resources/ublock/manifest_key.txt).
++inline constexpr char kUBlockOriginComponentId[] =
++    "mhmkochafbhohfaebfieaalahinnplkb";
++
++// SHA1(kUBlockOriginComponentId), the form used by HashedExtensionId.
++inline constexpr char kUblockOriginComponentIdHashed[] =
++    "2E8E31CC467F0D935AD9CDA98622C9D570317AF7";
++
++}  // namespace nadhr
++
++#endif  // COMPONENTS_NADHR_UBLOCK_IDS_H_
+--- a/chrome/browser/extensions/component_loader.h
++++ b/chrome/browser/extensions/component_loader.h
+@@ -248,6 +248,7 @@
+                                  const std::string& name_string,
+                                  const std::string& description_string);
+   void AddWebStoreApp();
++  void AddUBlock();
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+   void AddChromeApp();
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -69,6 +69,7 @@
+ #include "ui/accessibility/accessibility_features.h"
+ #include "ui/base/l10n/l10n_util.h"
+ #include "ui/base/resource/resource_bundle.h"
++#include "third_party/ublock/resources/grit/ublock_resources.h"
+ #include "ui/webui/buildflags.h"
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+@@ -634,6 +635,22 @@
+ #endif
+ }
+ 
++// Nadhr: uBlock Origin, bundled in the resource pak and loaded as a component
++// extension with ordinary (non-component) privileges; see
++// patches/nadhr/ublock/restrict-component-privileges.patch.
++void ComponentLoader::AddUBlock() {
++  Add(IDR_UBLOCK_MANIFEST_JSON, base::FilePath(FILE_PATH_LITERAL("ublock")));
++
++  ComponentExtensionInfo& info = component_extensions_.back();
++  std::string error;
++  if (!extension_l10n_util::LocalizeExtension(
++          info.root_directory, &info.manifest,
++          extension_l10n_util::GzippedMessagesPermission::kAllowForTrustedSource,
++          &error, /*is_component=*/true)) {
++    LOG(ERROR) << "Failed to localize uBlock Origin: " << error;
++  }
++}
++
+ #if BUILDFLAG(IS_CHROMEOS)
+ void ComponentLoader::AddChromeApp() {
+   AddWithNameAndDescription(
+@@ -711,6 +728,7 @@
+ 
+   if (!skip_session_components) {
+     AddWebStoreApp();
++    AddUBlock();
+ #if BUILDFLAG(IS_CHROMEOS)
+     AddChromeApp();
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+--- a/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
++++ b/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
+@@ -18,9 +18,11 @@
+ #include "chrome/grit/browser_resources.h"
+ #include "chrome/grit/component_extension_resources.h"
+ #include "chrome/grit/contextual_tasks_extension_resources.h"
++#include "components/nadhr/ublock_ids.h"
+ #include "extensions/buildflags/buildflags.h"
+ #include "extensions/common/constants.h"
+ #include "printing/buildflags/buildflags.h"
++#include "third_party/ublock/resources/grit/ublock_resources.h"
+ #include "ui/webui/buildflags.h"
+ 
+ #if BUILDFLAG(ENABLE_WEBUI_NTP)
+@@ -47,6 +49,7 @@
+       extension_misc::kNewTabPageExtensionId,
+ #endif  // BUILDFLAG(ENABLE_WEBUI_NTP)
+       extension_misc::kPdfExtensionId,
++      nadhr::kUBlockOriginComponentId,
+ #if BUILDFLAG(IS_CHROMEOS)
+       extension_misc::kAssessmentAssistantExtensionId,
+       extension_misc::kAccessibilityCommonExtensionId,
+@@ -108,6 +111,7 @@
+     case IDR_NETWORK_SPEECH_SYNTHESIS_MANIFEST:
+     case IDR_NETWORK_SPEECH_SYNTHESIS_MANIFEST_MV3:
+     case IDR_WEBSTORE_MANIFEST:
++    case IDR_UBLOCK_MANIFEST_JSON:
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+     // Separate ChromeOS list, as it is quite large.

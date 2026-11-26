@@ -1,0 +1,36 @@
+# Nadhr: let enterprise policy configure the bundled uBlock Origin.
+# Policy for an extension is validated against its storage.managed_schema,
+# which Chromium reads from disk. The bundled uBlock Origin is in the resource
+# pak, so read its schema (managed_storage.json) from there instead.
+# Admins configure it under 3rdparty > extensions >
+# mhmkochafbhohfaebfieaalahinnplkb, as documented by uBlock Origin.
+
+--- a/chrome/browser/extensions/api/storage/managed_value_store_cache.cc
++++ b/chrome/browser/extensions/api/storage/managed_value_store_cache.cc
+@@ -38,6 +38,8 @@
+ #include "extensions/common/extension_set.h"
+ #include "extensions/common/manifest.h"
+ #include "extensions/common/manifest_constants.h"
++#include "third_party/ublock/resources/grit/ublock_resources.h"
++#include "ui/base/resource/resource_bundle.h"
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+ #include "chrome/browser/ash/profiles/profile_helper.h"
+@@ -200,8 +202,16 @@
+     // and is valid. If the schema is invalid then proceed with an empty schema.
+     // The extension will be listed in chrome://policy but won't be able to load
+     // any policies.
++    // Nadhr: the bundled uBlock Origin lives in the resource pak, not on
++    // disk, so its schema cannot be read from extension->path(). Without
++    // this, policy for it would be dropped against an empty schema.
+     base::expected<policy::Schema, std::string> schema =
+-        StorageSchemaManifestHandler::GetSchema(extension.get());
++        Manifest::IsUBlockComponent(extension->id())
++            ? policy::Schema::Parse(
++                  ui::ResourceBundle::GetSharedInstance()
++                      .LoadDataResourceString(
++                          IDR_UBLOCK_MANAGED_STORAGE_JSON))
++            : StorageSchemaManifestHandler::GetSchema(extension.get());
+     if (!schema.has_value()) {
+       LOG(ERROR) << "Failed to parse schema for extension " << extension->id()
+                  << " with error: " << schema.error();

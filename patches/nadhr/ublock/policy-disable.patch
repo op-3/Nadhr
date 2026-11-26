@@ -1,0 +1,52 @@
+# Nadhr: enterprise off switch for the built-in uBlock Origin, using existing
+# Chromium policies. Blocking mhmkochafbhohfaebfieaalahinnplkb explicitly in
+# ExtensionInstallBlocklist or ExtensionSettings ("installation_mode":
+# "blocked") turns it off: it is not loaded at startup, and a runtime policy
+# change disables it. The "*" wildcard deliberately does not apply.
+# Depends on load-as-component.patch and restrict-component-privileges.patch.
+
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -27,6 +27,8 @@
+ #include "build/chromeos_buildflags.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/extensions/component_extensions_allowlist/allowlist.h"
++#include "chrome/browser/extensions/extension_management.h"
++#include "components/nadhr/ublock_ids.h"
+ #include "chrome/browser/extensions/component_loader_factory.h"
+ #include "chrome/browser/extensions/component_loader_prefs.h"
+ #include "chrome/browser/extensions/data_deleter.h"
+@@ -639,6 +641,12 @@
+ // extension with ordinary (non-component) privileges; see
+ // patches/nadhr/ublock/restrict-component-privileges.patch.
+ void ComponentLoader::AddUBlock() {
++  // An organisation that blocks this ID by policy does not get it loaded at
++  // all, so it cannot run (or fetch filter lists) before the policy check.
++  if (ExtensionManagementFactory::GetForBrowserContext(profile_)
++          ->IsInstallationExplicitlyBlocked(nadhr::kUBlockOriginComponentId)) {
++    return;
++  }
+   Add(IDR_UBLOCK_MANIFEST_JSON, base::FilePath(FILE_PATH_LITERAL("ublock")));
+ 
+   ComponentExtensionInfo& info = component_extensions_.back();
+--- a/chrome/browser/extensions/standard_management_policy_provider.cc
++++ b/chrome/browser/extensions/standard_management_policy_provider.cc
+@@ -266,6 +266,18 @@
+ bool StandardManagementPolicyProvider::MustRemainDisabled(
+     const Extension* extension,
+     disable_reason::DisableReason* reason) const {
++  // Nadhr: the built-in uBlock Origin is turned off when its ID is blocked
++  // explicitly (ExtensionInstallBlocklist or ExtensionSettings). A "*"
++  // wildcard does not count, so blocking user-installed extensions does not
++  // silently remove the built-in protection.
++  if (Manifest::IsUBlockComponent(extension->id()) &&
++      settings_->IsInstallationExplicitlyBlocked(extension->id())) {
++    if (reason) {
++      *reason = disable_reason::DISABLE_BLOCKED_BY_POLICY;
++    }
++    return true;
++  }
++
+   std::string required_version;
+   if (!settings_->CheckMinimumVersion(extension, &required_version)) {
+     if (reason) {
