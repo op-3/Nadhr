@@ -52,6 +52,30 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(tl.match('other.example'), 'other.example')
         self.assertEqual(len(tl), 2)
 
+    def test_jsonl_include_filter(self):
+        FEED['nd'] = ('{"domain":"keep.example","threat_type":"related-phishing"}\n'
+                      '{"domain":"skip.example","threat_type":"cert-polska"}\n\n'
+                      '{"domain":"sink.example","threat_type":"sinkhole-ns"}\n')
+        lists, _, _ = self._build([_provider(
+            'nd', format='jsonl', include={'threat_type': ['related-phishing']})])
+        tl = listformat.ThreatList(lists['nd'])
+        self.assertEqual(len(tl), 1)
+        self.assertEqual(tl.match('keep.example'), 'keep.example')
+
+    def test_hosts_are_deduplicated_across_providers(self):
+        FEED['first'] = 'a.example\nb.example\n'
+        FEED['second'] = 'b.example\nc.example\n'
+        FEED['third'] = 'a.example\n'
+        lists, attributions, report = self._build(
+            [_provider('first'), _provider('second'), _provider('third', attribution='T')])
+        self.assertEqual(len(listformat.ThreatList(lists['first'])), 2)
+        second = listformat.ThreatList(lists['second'])
+        self.assertEqual(len(second), 1)
+        self.assertIsNone(second.match('b.example'))  # already in "first"
+        self.assertNotIn('third', lists)  # added nothing new
+        self.assertNotIn('third', attributions)
+        self.assertIn('nothing new', report[2])
+
     def test_unpermitted_provider_stops_the_build(self):
         for field in ('commercial_use', 'redistribution'):
             with self.assertRaises(providers.ProviderNotPermitted, msg=field):

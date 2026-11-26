@@ -31,16 +31,21 @@
     },
     {
       "name": "netapi-compromised",
-      "title": "NetAPI compromised domains",
-      "url": "",
-      "format": "domains",
+      "title": "NetAPI compromised domains (related-phishing detections)",
+      "url": "https://netapi.com/api2/?method=compromised&dataset_type=url&sinkholes=0&format=jsonl",
+      "format": "jsonl",
       "licence": "CC-BY-4.0",
       "commercial_use": true,
       "redistribution": true,
-      "evidence": "https://netapi.com/compromised-urls/ (checked 2026-11-27): 'Published under Creative Commons Attribution 4.0 (CC BY 4.0)', 'Use it in commercial products, services and appliances'. Requires an active link wherever the data is shown or shared.",
+      "evidence": "https://netapi.com/compromised-urls/ (checked 2026-11-27): 'Published under Creative Commons Attribution 4.0 (CC BY 4.0)', 'Use it in commercial products, services and appliances'. Requires an active link wherever the data is shown or shared. Provenance (checked 2026-11-27): CERT Polska's list plus NetAPI's own detection on registry zone data and its crawler; its own detection never adds a top-100,000 domain. Nadhr takes only 'related-phishing' (CERT Polska is taken directly; sinkholed domains are harmless and excluded to save memory).",
       "attribution": "NetAPI compromised domains, CC BY 4.0, https://netapi.com/compromised-urls/",
-      "false_positive_url": "https://netapi.com/contact-us/",
-      "enabled": false
+      "false_positive_url": "https://netapi.com/compromised-urls/removal/",
+      "enabled": true,
+      "include": {
+        "threat_type": [
+          "related-phishing"
+        ]
+      }
     }
   ]
 }

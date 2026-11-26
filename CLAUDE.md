@@ -91,9 +91,15 @@ Pitfalls learned:
   lists (`resources/ublock/default_lists.json`, enforced by `prepare_ublock.py`).
 - No paid services, hosting, subscriptions or contracts without the owner's
   approval. No production server yet. Mirror tooling only (`threat_intel/`).
-- Outreach to rights holders: drafts are in
-  `docs/THREAT_PROTECTION_OUTREACH.md`. Show them to the owner and send only
-  with approval, because they go out in the owner's name.
+- **No licensing outreach (final owner decision, 2026-11-27).** Never contact
+  feed providers, request permissions, negotiate licences, or buy threat
+  intelligence. Use only sources whose published terms already allow
+  personal, enterprise, government and commercial use (plus redistribution for
+  the mirror). Exclude anything ambiguous. If coverage is lacking, document
+  the gap and keep looking for openly licensed alternatives.
+  `docs/THREAT_PROTECTION_OUTREACH.md` is cancelled, historical only.
+- CC BY 4.0 attribution (NetAPI) is approved for About/Credits and for warning
+  pages on matches from that list.
 - PR #2 merges only after a branch build shows uBlock blocking ads, letting
   normal requests through, and respecting policy.
 - Never claim parity with Safe Browsing or SmartScreen, or enterprise- or

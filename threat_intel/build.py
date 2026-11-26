@@ -24,26 +24,40 @@ NEVER_BLOCK = Path(__file__).resolve().parent / 'never_block.txt'
 
 
 def build_lists(provider_list, guard, fetch=None):
-    """Returns ({name: ntpl_bytes}, {name: attribution}, report lines)."""
+    """Returns ({name: ntpl_bytes}, {name: attribution}, report lines).
+
+    Hosts are deduplicated across providers: a host already published by an
+    earlier provider (in providers.json order) is not repeated, so memory and
+    lookup cost grow only with distinct hosts. A provider that adds nothing new
+    is not published at all.
+    """
     lists, attributions, report = {}, {}, []
+    seen = set()
     for provider in provider_list:
         if not provider.enabled:
             report.append(f'{provider.name}: disabled')
             continue
         provider.check_permitted()  # raises: never publish unpermitted data
         text = fetch(provider) if fetch else provider.fetch()
-        hosts, dropped = [], 0
+        hosts, dropped, duplicates = set(), 0, 0
         for raw in provider.parse(text):
             canonical = listformat.canonical_host(raw)
             if canonical is None or guard.rejects(canonical):
                 dropped += 1
-                continue
-            hosts.append(canonical)
-        data, _ = listformat.encode(hosts)
-        lists[provider.name] = data
-        attributions[provider.name] = provider.attribution
-        report.append(f'{provider.name}: {len(listformat.ThreatList(data))} hosts, '
-                      f'{dropped} dropped (invalid, public suffix or never-block)')
+            elif canonical in seen:
+                duplicates += 1
+            else:
+                hosts.add(canonical)
+        seen |= hosts
+        line = (f'{provider.name}: {len(hosts)} new hosts, {duplicates} already listed by '
+                f'an earlier provider, {dropped} dropped (invalid, public suffix or never-block)')
+        if hosts:
+            data, _ = listformat.encode(hosts)
+            lists[provider.name] = data
+            attributions[provider.name] = provider.attribution
+        else:
+            line += '; nothing new, not published'
+        report.append(line)
     return lists, attributions, report
 
 
