@@ -1,0 +1,15 @@
+name: Build stage
+description: Runs one resumable, time-limited stage of the Windows build
+inputs:
+  finished:
+    description: True when an earlier stage already finished the build
+    required: true
+  from_artifact:
+    description: True when an earlier stage uploaded a partial build to resume
+    required: true
+outputs:
+  finished:
+    description: Whether the build is complete after this stage
+runs:
+  using: node24
+  main: index.js

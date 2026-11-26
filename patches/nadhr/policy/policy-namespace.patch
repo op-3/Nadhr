@@ -1,0 +1,60 @@
+# Nadhr: enterprise policies are read from Nadhr's own namespace
+# (Software\Policies\Nadhr, /etc/nadhr/policies) and templates are generated for it.
+
+--- a/components/policy/tools/generate_policy_source.py
++++ b/components/policy/tools/generate_policy_source.py
+@@ -27,7 +27,7 @@
+ 
+ CHROME_POLICY_KEY = 'SOFTWARE\\\\Policies\\\\Google\\\\Chrome'
+ CHROME_FOR_TESTING_POLICY_KEY = CHROME_POLICY_KEY + ' for Testing'
+-CHROMIUM_POLICY_KEY = 'SOFTWARE\\\\Policies\\\\Chromium'
++CHROMIUM_POLICY_KEY = 'SOFTWARE\\\\Policies\\\\Nadhr'
+ PLATFORM_STRINGS = {
+   'chrome_frame': ['win'],
+   'chrome_os': ['chrome_os'],
+--- a/components/policy/tools/template_writers/writer_configuration.py
++++ b/components/policy/tools/template_writers/writer_configuration.py
+@@ -27,22 +27,22 @@
+   if '_chromium' in defines:
+     config = {
+       'build': 'chromium',
+-      'app_name': 'Chromium',
++      'app_name': 'Nadhr',
+       'doc_url': 'https://chromeenterprise.google/policies/',
+       'frame_name': 'Chromium Frame',
+       'os_name': 'ChromiumOS',
+       'webview_name': 'Chromium WebView',
+       'win_config': {
+         'win': {
+-          'reg_mandatory_key_name': 'Software\\Policies\\Chromium',
+-          'reg_recommended_key_name': 'Software\\Policies\\Chromium\\Recommended',
+-          'mandatory_category_path': ['chromium'],
+-          'recommended_category_path': ['chromium_recommended'],
++          'reg_mandatory_key_name': 'Software\\Policies\\Nadhr',
++          'reg_recommended_key_name': 'Software\\Policies\\Nadhr\\Recommended',
++          'mandatory_category_path': ['nadhr'],
++          'recommended_category_path': ['nadhr_recommended'],
+           'category_path_strings': {
+-            'chromium': 'Chromium',
+-            'chromium_recommended': 'Chromium - {doc_recommended}',
++            'nadhr': 'Nadhr',
++            'nadhr_recommended': 'Nadhr - {doc_recommended}',
+           },
+-          'namespace': 'Chromium.Policies.Chromium',
++          'namespace': 'Nadhr.Policies.Nadhr',
+         },
+         'chrome_os': {
+           'reg_mandatory_key_name': 'Software\\Policies\\ChromiumOS',
+@@ -56,9 +56,9 @@
+           'namespace': 'Chromium.Policies.ChromiumOS',
+         },
+       },
+-      'admx_prefix': 'chromium',
+-      'linux_policy_path': '/etc/chromium/policies/',
+-      'bundle_id': 'org.chromium',
++      'admx_prefix': 'nadhr',
++      'linux_policy_path': '/etc/nadhr/policies/',
++      'bundle_id': 'org.nadhr',
+     }
+   elif (
+     '_google_chrome' in defines or '_is_chrome_for_testing_branded' in defines

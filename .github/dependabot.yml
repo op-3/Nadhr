@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /.github/actions/stage
+    schedule:
+      interval: weekly
+  # Upstream ungoogled-chromium-windows is bumped deliberately, following
+  # docs/UPSTREAM_MAINTENANCE.md, because every bump needs patch revalidation.

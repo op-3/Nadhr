@@ -1,0 +1,282 @@
+# Builds Nadhr for Windows x64 on free GitHub-hosted runners.
+# A full Chromium build needs far longer than one job's 6 h limit, so it is
+# split into chained stages; each stage resumes the previous one's tree.
+name: build-windows
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage-1:
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: false
+          from_artifact: false
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-2:
+    needs: stage-1
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-1.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-3:
+    needs: stage-2
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-2.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-4:
+    needs: stage-3
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-3.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-5:
+    needs: stage-4
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-4.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-6:
+    needs: stage-5
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-5.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-7:
+    needs: stage-6
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-6.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-8:
+    needs: stage-7
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-7.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-9:
+    needs: stage-8
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-8.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-10:
+    needs: stage-9
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-9.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-11:
+    needs: stage-10
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-10.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-12:
+    needs: stage-11
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-11.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-13:
+    needs: stage-12
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-12.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-14:
+    needs: stage-13
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-13.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-15:
+    needs: stage-14
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-14.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  stage-16:
+    needs: stage-15
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/prepare
+      - id: stage
+        uses: ./.github/actions/stage
+        with:
+          finished: ${{ needs.stage-15.outputs.finished }}
+          from_artifact: true
+    outputs:
+      finished: ${{ steps.stage.outputs.finished }}
+  complete:
+    needs: stage-16
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure the build finished
+        run: |
+          if [ "${{ needs.stage-16.outputs.finished }}" != "true" ]; then
+            echo "Build did not finish within 16 stages."
+            exit 1
+          fi

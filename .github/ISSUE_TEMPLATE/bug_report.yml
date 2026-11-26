@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in Nadhr does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Security vulnerabilities must be reported privately. See SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Nadhr version
+      description: From nadhr://version
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, Linux, macOS]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: upstream
+    attributes:
+      label: Does it also happen in ungoogled-chromium of the same version?
+      description: Helps decide whether the bug is in Nadhr or upstream.
