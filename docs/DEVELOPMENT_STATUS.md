@@ -1,11 +1,40 @@
 # Development status
 
-Last updated: 2026-11-26. This file lists only what has actually been done and
+Last updated: 2026-11-27. This file lists only what has actually been done and
 verified. It gives no completion percentages.
 
 ## Current stage
 
-**Stage 1: environment and upstream foundation** (in progress).
+**Stage 1: environment and upstream foundation** (in progress). There is no
+verified build yet.
+
+## Verification levels
+
+Each feature is at exactly one level. It moves up only with recorded evidence.
+
+1. **Implemented:** code or patch written.
+2. **Patch-validated:** applies to the pinned Chromium release with the
+   upstream patches (`validate_patches.py --remote`, CI).
+3. **Compiled:** built successfully in CI.
+4. **Runtime-tested:** observed working in a running Nadhr build (smoke test or
+   recorded manual test).
+5. **Production-verified:** runtime-tested on every supported platform and
+   covered by release checks.
+
+| Feature | Level | Where |
+|---|---|---|
+| Product name and company (`BRANDING`) | 2. patch-validated | main |
+| Windows install identity (user data dir, ProgIDs, registry, GUIDs) | 2. patch-validated | main |
+| Policy namespace (`Software\Policies\Nadhr`, template names) | 2. patch-validated | main |
+| UI string branding (Nadhr, Arabic نظر), translations preserved | 2. patch-validated. Verified on real strings, not seen in a build. | main |
+| Launch smoke test (JS, branding, default profile, blocking) | 1. implemented; controls run against Edge | main |
+| Built-in uBlock Origin: bundle, component load, restricted privileges, l10n | 2. patch-validated | PR #2 |
+| uBlock Origin: enterprise managed configuration | 2. patch-validated | PR #2 |
+| uBlock Origin: enterprise off switch (explicit ID block) | 2. patch-validated | PR #2 |
+| uBlock Origin `redirect=empty` | no patch needed. Upstream code path read, not runtime-tested. | n/a |
+| Phishing/malware protection | design decided (docs/SECURITY.md). Malware lists come with uBlock; real-time and download protection: none. | PR #2 |
+| Windows build pipeline | 1. implemented. Builds 1 and 2 failed in stage 1 (clone path bug, fixed); build 3 in progress. | main |
+| Layouts, performance engine, onboarding, updater, Linux, macOS | not started | n/a |
 
 ## Done and verified
 
