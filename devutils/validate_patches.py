@@ -11,7 +11,6 @@ first, then Nadhr's, with `git apply`.
 """
 
 import argparse
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -57,7 +56,8 @@ def merge(layers, dest):
     """Merges the stack, keeping only upstream patches that share a file with Nadhr's.
 
     Nadhr's patches can only conflict with upstream patches touching the same
-    files; upstream validates the rest of its own stack.
+    files; upstream validates the rest of its own stack. Returns the set of
+    files Nadhr's patches touch.
     """
     nadhr = layers[-1]
     ours = set().union(*(touched_files(nadhr / p) for p in read_series(nadhr)))
@@ -68,11 +68,13 @@ def merge(layers, dest):
                 continue
             target = dest / f'{idx}' / rel
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(layer / rel, target)
+            # Submodule checkouts on Windows may have CRLF (core.autocrlf); the
+            # patches are LF in git, and `git apply` is strict about it.
+            target.write_bytes((layer / rel).read_bytes().replace(b'\r\n', b'\n'))
             series.append(f'{idx}/{rel}')
     (dest / 'series').write_text('\n'.join(series) + '\n', encoding='utf-8')
     print('Stack under test:\n  ' + '\n  '.join(series))
-    return len(series)
+    return ours
 
 
 def main():
@@ -94,10 +96,10 @@ def main():
 
     with tempfile.TemporaryDirectory(prefix='nadhr-patches-') as tmp:
         stack, tree = Path(tmp) / 'stack', Path(tmp) / 'tree'
-        count = merge(LAYERS[args.platform], stack)
+        files = merge(LAYERS[args.platform], stack)
         series = read_series(stack)
-        files = set().union(*(touched_files(stack / p) for p in series))
-        print(f'Validating {count} patches touching {len(files)} files...')
+        nadhr_prefix = f'{len(LAYERS[args.platform]) - 1}/'
+        print(f'Validating {len(series)} patches on the {len(files)} files Nadhr touches...')
         for rel in sorted(files):
             if args.local:
                 src = args.local / rel
@@ -109,7 +111,11 @@ def main():
                 (tree / rel).write_bytes(data)
         failed = False
         for rel in series:
-            res = subprocess.run(['git', 'apply', '--verbose', str(stack / rel)],
+            # Upstream patches are applied only to the files Nadhr touches: that is
+            # the state Nadhr's patches meet in the real build.
+            include = [] if rel.startswith(nadhr_prefix) else [f'--include={f}' for f in files]
+            res = subprocess.run(['git', '-c', 'core.autocrlf=false', 'apply', '--verbose',
+                                  *include, str(stack / rel)],
                                  cwd=tree, capture_output=True, text=True, check=False)
             print(('OK    ' if res.returncode == 0 else 'FAIL  ') + rel)
             if res.returncode != 0:

@@ -12,6 +12,23 @@ Every known gap, honestly stated. Remove an entry only when it is fixed and veri
   (`chrome.exe`), the internal `chrome://` scheme, and strings that say "Chrome"
   (not "Chromium"), which have not been reviewed yet.
 
+## Built-in uBlock Origin (branch `feature/ublock-origin`)
+
+- The patches apply cleanly to the pinned release but **have not been compiled
+  or run**. Nothing below has been observed in a running browser.
+- uBlock Origin's zero-byte `web_accessible_resources/empty` resource is
+  expected to fail to load from the resource pak, because `ResourceBundle`
+  treats empty data as missing. Filters using `redirect=empty` may then break
+  the request instead of neutralising it. A narrowly scoped fix is still to be
+  written.
+- Whether enterprise policies can configure it through managed storage
+  (`3rdparty` → `extensions` → `mhmkochafbhohfaebfieaalahinnplkb`) on a
+  component extension is not yet verified.
+- There is no policy yet to turn off the built-in blocker for organisations
+  that use another one.
+- uBlock Origin's code updates only with Nadhr releases. Its filter lists
+  update themselves over the network (see PRIVACY.md).
+
 ## Windows identity
 
 - The elevation service and system tracing service COM IDs (`elevator_clsid`,

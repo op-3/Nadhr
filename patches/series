@@ -1,3 +1,7 @@
 nadhr/branding/product-name.patch
 nadhr/policy/policy-namespace.patch
 nadhr/windows/install-identity.patch
+nadhr/ublock/bundle-sources.patch
+nadhr/ublock/load-as-component.patch
+nadhr/ublock/restrict-component-privileges.patch
+nadhr/ublock/component-l10n.patch

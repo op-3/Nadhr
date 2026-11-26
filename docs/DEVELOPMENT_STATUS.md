@@ -34,6 +34,21 @@ verified. It gives no completion percentages.
   development laptop. Local work is limited to source changes, patch validation
   and lightweight tests.
 
+## On branch `feature/ublock-origin` (not merged)
+
+Built-in uBlock Origin 1.77.2 (official MV2 release, SHA-256 pinned):
+
+- 4 patches (resource pak, component loading, privilege restriction,
+  localisation) apply cleanly on top of the 9 upstream patches that touch the
+  same 33 files (`validate_patches.py --remote`).
+- `utils/prepare_ublock.py` writes Nadhr's public key into the manifest. Tests
+  check the ID derivation against Chromium's PDF viewer key and ID, and that the
+  key matches the ID compiled into the C++ header. A tampered key is rejected.
+- The download and SHA-256 check were exercised on the real release; a
+  tampered hash is detected.
+- **Not yet compiled or run.** It will be merged only after a CI build compiles
+  it and a test confirms blocking in the running browser.
+
 ## Not started
 
 Everything else in [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md), including
