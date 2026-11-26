@@ -55,7 +55,7 @@ class PrepareTest(unittest.TestCase):
 class DefaultListsTest(unittest.TestCase):
 
     POLICY = {'approved': {'good': {}, 'good-regional': {}},
-              'off_pending_review': {'ambiguous': 'reason'}}
+              'excluded': {'ambiguous': 'reason'}}
 
     def _run(self, assets):
         tmp = tempfile.TemporaryDirectory()
@@ -95,7 +95,7 @@ class DefaultListsTest(unittest.TestCase):
 
     def test_repository_policy_is_consistent(self):
         policy = json.loads(prepare_ublock.LIST_POLICY_FILE.read_text(encoding='utf-8'))
-        self.assertFalse(set(policy['approved']) & set(policy['off_pending_review']))
+        self.assertFalse(set(policy['approved']) & set(policy['excluded']))
         for key, entry in policy['approved'].items():
             self.assertTrue(entry.get('licence') and entry.get('evidence'), key)
 

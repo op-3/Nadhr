@@ -2,6 +2,7 @@
   "_comment": [
     "Which uBlock Origin filter lists Nadhr enables by default, and why.",
     "Rule (owner decision 2026-11-27): a list may be on by default only if its terms",
+    "Ambiguous lists are excluded; no permission is sought from providers (owner decision 2026-11-27).",
     "explicitly allow personal, enterprise, government and commercial use. Ambiguous",
     "or restricted lists are off by default even though uBlock Origin may enable them;",
     "users can still turn any list on themselves in the uBlock Origin dashboard.",
@@ -9,18 +10,56 @@
     "uBlock Origin adds a default-on list that has not been reviewed here."
   ],
   "approved": {
-    "ublock-filters":     {"licence": "GPL-3.0", "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE", "reviewed": "2026-11-27"},
-    "ublock-badware":     {"licence": "GPL-3.0", "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE", "reviewed": "2026-11-27"},
-    "ublock-privacy":     {"licence": "GPL-3.0", "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE", "reviewed": "2026-11-27"},
-    "ublock-unbreak":     {"licence": "GPL-3.0", "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE", "reviewed": "2026-11-27"},
-    "ublock-quick-fixes": {"licence": "GPL-3.0", "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE", "reviewed": "2026-11-27"},
-    "easylist":           {"licence": "GPL-3.0-or-later OR CC-BY-SA-3.0", "evidence": "https://easylist.to/pages/licence.html", "reviewed": "2026-11-27"},
-    "easyprivacy":        {"licence": "GPL-3.0-or-later OR CC-BY-SA-3.0", "evidence": "https://easylist.to/pages/licence.html", "reviewed": "2026-11-27"},
-    "ara-0":              {"licence": "CC-BY-SA-3.0", "evidence": "Liste_AR.txt header: 'Licence : https://creativecommons.org/licenses/by-sa/3.0/'", "reviewed": "2026-11-27", "regional": "ar"},
-    "FRA-0":              {"licence": "GPL-3.0", "evidence": "https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE", "reviewed": "2026-11-27", "regional": "fr, ar"}
+    "ublock-filters": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "reviewed": "2026-11-27"
+    },
+    "ublock-badware": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "reviewed": "2026-11-27"
+    },
+    "ublock-privacy": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "reviewed": "2026-11-27"
+    },
+    "ublock-unbreak": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "reviewed": "2026-11-27"
+    },
+    "ublock-quick-fixes": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "reviewed": "2026-11-27"
+    },
+    "easylist": {
+      "licence": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "evidence": "https://easylist.to/pages/licence.html",
+      "reviewed": "2026-11-27"
+    },
+    "easyprivacy": {
+      "licence": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "evidence": "https://easylist.to/pages/licence.html",
+      "reviewed": "2026-11-27"
+    },
+    "ara-0": {
+      "licence": "CC-BY-SA-3.0",
+      "evidence": "Liste_AR.txt header: 'Licence : https://creativecommons.org/licenses/by-sa/3.0/'",
+      "reviewed": "2026-11-27",
+      "regional": "ar"
+    },
+    "FRA-0": {
+      "licence": "GPL-3.0",
+      "evidence": "https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE",
+      "reviewed": "2026-11-27",
+      "regional": "fr, ar"
+    }
   },
-  "off_pending_review": {
-    "urlhaus-1": "Derived from abuse.ch URLhaus. abuse.ch terms (21 Oct 2026): free for not-for-profit use; commercial use 'may require a paid subscription' (Spamhaus). Ambiguous for Nadhr's intended use. Clarification to be requested from abuse.ch.",
-    "plowe-0": "Peter Lowe's list: no licence; the site says 'Feel free to combine this list with yours ... and put it up on the web', which does not explicitly cover commercial use. Permission to be requested."
+  "excluded": {
+    "urlhaus-1": "Derived from abuse.ch URLhaus. abuse.ch terms (21 Oct 2026): free for not-for-profit use; commercial use 'may require a paid subscription' (Spamhaus). Ambiguous for Nadhr's intended use. Excluded.",
+    "plowe-0": "Peter Lowe's list: no licence; the site says 'Feel free to combine this list with yours ... and put it up on the web', which does not explicitly cover commercial use. Excluded."
   }
 }

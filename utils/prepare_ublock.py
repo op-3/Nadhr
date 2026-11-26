@@ -41,7 +41,7 @@ def apply_default_lists(ublock_dir, policy=None):
     Returns (enabled, disabled) asset keys.
     """
     policy = policy or json.loads(LIST_POLICY_FILE.read_text(encoding='utf-8'))
-    approved, pending = policy['approved'], policy['off_pending_review']
+    approved, pending = policy['approved'], policy['excluded']
     assets_path = ublock_dir / 'assets' / 'assets.json'
     assets = json.loads(assets_path.read_text(encoding='utf-8'))
 
