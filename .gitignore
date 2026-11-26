@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 # Private working brief, not part of the public project.
 /prompt.md
+
+# Threat-intel signing keys must never be committed.
+*.pem
+*.key

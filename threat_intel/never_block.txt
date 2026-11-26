@@ -1,0 +1,29 @@
+# Domains a Nadhr mirror never publishes, whatever a feed says: blocking any of
+# these would break a large share of the web. Subdomains on them (for example
+# a phishing page under sites.google.com) are not affected by this list; only
+# entries exactly equal to a domain below are dropped. Curated by Nadhr.
+google.com
+youtube.com
+facebook.com
+instagram.com
+whatsapp.com
+microsoft.com
+live.com
+office.com
+microsoftonline.com
+apple.com
+icloud.com
+amazon.com
+cloudflare.com
+github.com
+wikipedia.org
+x.com
+twitter.com
+linkedin.com
+gov.sa
+gov.ae
+gov.qa
+gov.om
+gov.kw
+gov.bh
+gov.eg

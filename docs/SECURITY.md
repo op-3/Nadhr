@@ -18,17 +18,11 @@ paths and IDs, not security logic.
 
 ## Phishing and malware protection
 
-ungoogled-chromium compiles out Safe Browsing (`safe_browsing_mode=0`) because
-it contacts Google. Nadhr therefore has **no URL reputation protection today**.
-This is a release-blocking gap.
-
-Options to evaluate, documenting the privacy trade-off of each:
-
-1. Bundled, regularly updated blocklists of malicious domains enforced locally
-   (for example through the built-in content blocker). Nothing is sent per URL.
-2. Safe Browsing's Update API (v4/v5 local hash-prefix databases), opt-in, so
-   only hash prefixes of matching URLs are ever sent.
-3. Both: local lists by default, hash-prefix lookups offered as an option.
+ungoogled-chromium compiles out Safe Browsing. Nadhr's replacement uses local,
+licence-checked lists with signed (TUF) updates. The design, the licence audit,
+the measurements and the limits are in [THREAT_PROTECTION.md](THREAT_PROTECTION.md).
+It is **not equivalent** to Safe Browsing or SmartScreen, and global phishing
+coverage with permitted sources is currently inadequate.
 
 ## Manifest V2
 

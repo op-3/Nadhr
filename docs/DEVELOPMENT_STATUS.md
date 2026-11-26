@@ -32,7 +32,10 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 | uBlock Origin: enterprise managed configuration | 2. patch-validated | PR #2 |
 | uBlock Origin: enterprise off switch (explicit ID block) | 2. patch-validated | PR #2 |
 | uBlock Origin `redirect=empty` | no patch needed. Upstream code path read, not runtime-tested. | n/a |
-| Phishing/malware protection | design decided (docs/SECURITY.md). Malware lists come with uBlock; real-time and download protection: none. | PR #2 |
+| Threat protection mirror tooling: NTPL list format, licence-gated providers, PSL and never-block guards, TUF-signed static repository, reference client | 1. implemented and tested (20 tests, including tamper, rollback, freeze and foreign-key attacks). Real-data dry run: 129,621 hosts, 1.0 MB. | main (`threat_intel/`) |
+| Threat protection in the browser (list store, navigation check, warning page, C++ TUF updater, policies) | not started. Design in docs/THREAT_PROTECTION.md. | n/a |
+| Default filter lists limited to licence-approved ones | 1. implemented and tested | PR #2 |
+| Global phishing coverage with permitted sources | **inadequate**: the permitted set is mainly Poland-targeted (see THREAT_PROTECTION.md, Limits) | n/a |
 | Windows build pipeline | 1. implemented. Builds 1 and 2 failed in stage 1 (clone path bug, fixed); build 3 in progress. | main |
 | Layouts, performance engine, onboarding, updater, Linux, macOS | not started | n/a |
 

@@ -1,0 +1,46 @@
+{
+  "_comment": [
+    "Feeds a Nadhr threat-intelligence mirror may publish. Each entry records its terms",
+    "with evidence (owner rule 2026-11-27: explicit commercial use and redistribution).",
+    "Enterprises add their own feeds here (for example file: URLs on an internal share)."
+  ],
+  "providers": [
+    {
+      "name": "cert-polska",
+      "title": "CERT Polska Warning List",
+      "url": "https://hole.cert.pl/domains/v2/domains.txt",
+      "format": "domains",
+      "licence": "CERT Polska Warning List terms",
+      "commercial_use": true,
+      "redistribution": true,
+      "evidence": "https://cert.pl/en/warning-list/ (checked 2026-11-27): 'may be used by any user for any purpose, including commercial purposes'. Attribution not required; must not imply endorsement by NASK-PIB / CERT Polska.",
+      "attribution": "",
+      "false_positive_url": "https://cert.pl/en/warning-list/"
+    },
+    {
+      "name": "durablenapkin-scam",
+      "title": "Scam Blocklist by DurableNapkin",
+      "url": "https://raw.githubusercontent.com/durablenapkin/scamblocklist/master/hosts.txt",
+      "format": "hosts",
+      "licence": "MIT",
+      "commercial_use": true,
+      "redistribution": true,
+      "evidence": "File header '# License: MIT (https://mit-license.org/)' (checked 2026-11-27); maintainer's own research, no third-party feeds (github.com/durablenapkin/scamblocklist).",
+      "attribution": "Scam Blocklist by DurableNapkin (MIT), https://github.com/durablenapkin/scamblocklist",
+      "false_positive_url": "https://github.com/durablenapkin/scamblocklist/issues"
+    },
+    {
+      "name": "netapi-compromised",
+      "title": "NetAPI compromised domains",
+      "url": "",
+      "format": "domains",
+      "licence": "CC-BY-4.0",
+      "commercial_use": true,
+      "redistribution": true,
+      "evidence": "https://netapi.com/compromised-urls/ (checked 2026-11-27): 'Published under Creative Commons Attribution 4.0 (CC BY 4.0)', 'Use it in commercial products, services and appliances'. Requires an active link wherever the data is shown or shared.",
+      "attribution": "NetAPI compromised domains, CC BY 4.0, https://netapi.com/compromised-urls/",
+      "false_positive_url": "https://netapi.com/contact-us/",
+      "enabled": false
+    }
+  ]
+}
