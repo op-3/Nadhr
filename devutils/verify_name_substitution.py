@@ -11,41 +11,25 @@ of its .xtb translations) at the pinned Chromium tag, then checks:
 Downloads about 10 MB into a temporary directory.
 """
 
-import base64
 import io
 import re
 import sys
 import tarfile
 import tempfile
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-UC = ROOT / 'upstream' / 'ungoogled-chromium-windows' / 'ungoogled-chromium'
 sys.path.insert(0, str(ROOT / 'utils'))
 import name_substitution as ns  # pylint: disable=wrong-import-position
+import gitiles  # pylint: disable=wrong-import-position
 
 GRD = 'chrome/app/chromium_strings.grd'
 
 
-def _url(version, rel, archive=False):
-    kind = '+archive' if archive else '+'
-    suffix = '.tar.gz' if archive else '?format=TEXT'
-    return f'https://chromium.googlesource.com/chromium/src/{kind}/refs/tags/{version}/{rel}{suffix}'
-
-
-def _fetch(version, rel, dest):
-    for attempt in range(6):  # gitiles rate-limits bursts with HTTP 429/503
-        try:
-            with urllib.request.urlopen(_url(version, rel), timeout=120) as resp:
-                data = base64.b64decode(resp.read())
-            break
-        except urllib.error.HTTPError as exc:
-            if exc.code not in (429, 503) or attempt == 5:
-                raise
-            time.sleep(2 ** attempt)
+def _fetch(rel, dest):
+    data = gitiles.fetch_file(rel)
+    if data is None:
+        raise FileNotFoundError(rel)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
 
@@ -55,20 +39,18 @@ def _translation_ids(xtb):
 
 
 def main():
-    version = (UC / 'chromium_version.txt').read_text(encoding='utf-8').strip()
     with tempfile.TemporaryDirectory(prefix='nadhr-names-') as tmp:
         tree = Path(tmp)
-        with urllib.request.urlopen(_url(version, 'tools/grit', archive=True), timeout=300) as r:
-            tarfile.open(fileobj=io.BytesIO(r.read())).extractall(tree / 'tools' / 'grit',
-                                                                  filter='data')
+        tarfile.open(fileobj=io.BytesIO(gitiles.fetch_archive('tools/grit'))).extractall(
+            tree / 'tools' / 'grit', filter='data')
         grd = tree / GRD
-        _fetch(version, GRD, grd)
+        _fetch(GRD, grd)
         grd_text = grd.read_text(encoding='utf-8')
         for part in re.findall(r'<part\s+file="([^"]+\.grdp)"', grd_text):
-            _fetch(version, f'chrome/app/{part}', tree / 'chrome' / 'app' / part)
+            _fetch(f'chrome/app/{part}', tree / 'chrome' / 'app' / part)
         xtbs = ns.xtb_files(grd, grd_text)
         for xtb, _ in xtbs:
-            _fetch(version, xtb.relative_to(tree).as_posix(), xtb)
+            _fetch(xtb.relative_to(tree).as_posix(), xtb)
 
         sys.path.insert(0, str(tree / 'tools' / 'grit'))
         from grit.extern import tclib  # pylint: disable=import-error,import-outside-toplevel

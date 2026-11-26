@@ -5,9 +5,9 @@
 
 Patches are applied in the same order as the real build:
 ungoogled-chromium -> ungoogled-chromium-<platform> -> Nadhr.
-The stack is merged into a temporary directory and checked with
-ungoogled-chromium's own validator, which fetches only the files the patches
-touch (remote mode) or reads them from an unmodified local tree.
+Only the files Nadhr's patches touch are fetched (remote mode) or read from an
+unmodified local tree; upstream patches touching the same files are applied
+first, then Nadhr's, with `git apply`.
 """
 
 import argparse
@@ -16,6 +16,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+import gitiles
 
 ROOT = Path(__file__).resolve().parent.parent
 UC_WIN = ROOT / 'upstream' / 'ungoogled-chromium-windows'
@@ -101,7 +103,7 @@ def main():
                 src = args.local / rel
                 data = src.read_bytes() if src.is_file() else None
             else:
-                data = fetch_upstream(rel)
+                data = gitiles.fetch_file(rel)
             if data is not None:  # absent files are ones a patch creates
                 (tree / rel).parent.mkdir(parents=True, exist_ok=True)
                 (tree / rel).write_bytes(data)
@@ -114,23 +116,6 @@ def main():
                 print(res.stderr, file=sys.stderr)
                 failed = True
         return 1 if failed else 0
-
-
-def fetch_upstream(rel):
-    """Returns a file from chromium/src at the pinned version, or None if absent."""
-    import base64
-    import urllib.error
-    import urllib.request
-    version = (UC / 'chromium_version.txt').read_text(encoding='utf-8').strip()
-    url = (f'https://chromium.googlesource.com/chromium/src/+/refs/tags/{version}/'
-           f'{rel}?format=TEXT')
-    try:
-        with urllib.request.urlopen(url, timeout=60) as resp:
-            return base64.b64decode(resp.read())
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return None
-        raise
 
 
 if __name__ == '__main__':
