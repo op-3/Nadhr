@@ -303,7 +303,14 @@ jobs:
           "NADHR_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
       - name: Launch smoke test
         shell: pwsh
-        run: python devutils/smoke_test.py "$env:NADHR_EXE" | Tee-Object smoke-test.txt; exit $LASTEXITCODE
+        run: |
+          # The runner is disposable, so the default-profile check may write to LOCALAPPDATA.
+          $extra = @('--check-default-profile')
+          if (Select-String -Quiet -Pattern '^nadhr/ublock/' -Path patches/series) {
+            $extra += '--expect-content-blocking'
+          }
+          python devutils/smoke_test.py "$env:NADHR_EXE" @extra | Tee-Object smoke-test.txt
+          exit $LASTEXITCODE
       - uses: actions/upload-artifact@v7
         if: always()
         with:
