@@ -81,3 +81,30 @@ Pitfalls learned:
 - gitiles rate-limits bursts (HTTP 429). Use `devutils/gitiles.py`, which retries.
 - When reproducing a bug offline, reproduce the exact code path. A first "fix"
   for the clone bug passed a simplified repro and still failed in CI.
+
+## Owner decisions, 2026-11-27 (binding)
+
+- Threat protection on by default, but only with sources whose terms
+  **explicitly** allow personal, enterprise, government and commercial use
+  (a mirror also needs redistribution rights). Pointing at a URL does not
+  exempt a restricted feed. The same rule is applied to uBlock's default filter
+  lists (`resources/ublock/default_lists.json`, enforced by `prepare_ublock.py`).
+- No paid services, hosting, subscriptions or contracts without the owner's
+  approval. No production server yet. Mirror tooling only (`threat_intel/`).
+- **No licensing outreach (final owner decision, 2026-11-27).** Never contact
+  feed providers, request permissions, negotiate licences, or buy threat
+  intelligence. Use only sources whose published terms already allow
+  personal, enterprise, government and commercial use (plus redistribution for
+  the mirror). Exclude anything ambiguous. If coverage is lacking, document
+  the gap and keep looking for openly licensed alternatives.
+  `docs/THREAT_PROTECTION_OUTREACH.md` is cancelled, historical only.
+- CC BY 4.0 attribution (NetAPI) is approved for About/Credits and for warning
+  pages on matches from that list.
+- PR #2 merges only after a branch build shows uBlock blocking ads, letting
+  normal requests through, and respecting policy.
+- Never claim parity with Safe Browsing or SmartScreen, or enterprise- or
+  government-readiness. Global phishing coverage with permitted sources is
+  inadequate today.
+
+Threat-intel tooling tests: `pip install -r threat_intel/requirements.txt`,
+then `python -m unittest discover -s threat_intel/tests -t .`

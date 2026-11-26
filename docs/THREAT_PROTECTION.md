@@ -15,7 +15,10 @@ Browsing or Microsoft SmartScreen, and Nadhr must never describe it that way
 - Updates are authenticated and integrity-verified. If an update fails, the
   last verified lists keep protecting the user, offline too.
 - Providers are replaceable without browser changes.
-- No paid services, hosting or contracts without the owner's approval.
+- No licensing outreach, special permissions, negotiations or paid threat
+  intelligence. Ambiguous or restricted sources are excluded automatically
+  (the build refuses providers without explicit recorded rights).
+- No paid hosting or services.
 - No new background services.
 
 ## Architecture
@@ -93,13 +96,16 @@ provider's published terms; the key ones were re-checked by hand.
 |---|---|---|---|
 | CERT Polska Warning List | "any purpose, including commercial purposes"; no endorsement may be implied | phishing, mainly targeting Poland | 127,469 hosts |
 | Scam Blocklist by DurableNapkin | MIT; maintainer's own research | fake shops, global | 2,152 hosts |
+| NetAPI compromised domains, `related-phishing` detections only | CC BY 4.0; attribution shown in About/Credits and on warning pages for its matches | phishing infrastructure related to listed domains | 1,318 new hosts |
 | uBlock filters – Badware risks (via the bundled uBlock Origin, not the mirror) | GPL-3.0 | curated badware | n/a |
 
-**Permitted but not enabled:** NetAPI compromised domains (CC BY 4.0). The
-attribution link must be shown in the UI before it is enabled; most entries
-come from CERT Polska anyway.
+NetAPI is used selectively. Its feed also contains a copy of CERT Polska,
+which Nadhr takes directly, and sinkholed malware domains, which are
+controlled by defenders and harmless. Leaving both out avoids about 126,866
+duplicates and 156,000 low-value entries. All lists are deduplicated across
+providers when the mirror is built.
 
-**Not usable without written permission:**
+**Excluded (terms ambiguous or restrictive; no permission will be sought):**
 
 - URLhaus/ThreatFox (abuse.ch): commercial use "may require" a Spamhaus subscription.
 - PhishStats: redistribution prohibited without permission. It is the strongest
@@ -124,20 +130,24 @@ State these plainly in the product and to customers:
 Until coverage improves, Nadhr must not claim parity with Safe Browsing or
 SmartScreen, and must not call itself enterprise- or government-ready.
 
-Paths to better coverage, none of which costs anything without approval:
+Ways to improve coverage within the owner's rules (no outreach, no payment):
 
-1. Written permission from PhishStats or abuse.ch (drafts in
-   [THREAT_PROTECTION_OUTREACH.md](THREAT_PROTECTION_OUTREACH.md), awaiting
-   owner approval to send).
-2. National CERTs in the Gulf and Arab region, if any publish openly licensed lists.
-3. Feeds licensed by enterprise customers for their own mirrors.
+1. Keep watching for openly licensed feeds, especially national CERTs (Arab
+   region and Gulf included), and add any whose published terms qualify.
+2. Enterprises can add their own feeds to their own mirrors
+   (`providers.json` accepts internal `file:` sources).
+3. Improve how the browser uses what exists: subframe checks, and lists
+   bundled with each release for protection from first run.
+
+Outreach drafts are cancelled ([THREAT_PROTECTION_OUTREACH.md](THREAT_PROTECTION_OUTREACH.md)).
 
 ## Measurements (real data, 2026-11-27)
 
-These come from the dry run of `threat_intel.build` with the CERT Polska and
-DurableNapkin feeds:
+These come from the dry run of `threat_intel.build` with CERT Polska,
+DurableNapkin and NetAPI `related-phishing`, deduplicated:
 
-- 129,621 entries. Total list data is about 1.0 MB; as a packed array in memory
+- 130,935 distinct hosts. Lookup and memory figures below were measured with
+  129,621 hosts, before NetAPI was added. Total list data is about 1.0 MB; as a packed array in memory
   it is 1.0 MB (the Python reference uses 5.8 MB).
 - Build, sign and publish: about 4.6 s.
 - Lookup per navigation (all lists, 4-label host): **40 µs in the Python

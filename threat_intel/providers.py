@@ -28,7 +28,9 @@ class Provider:
     name: str
     title: str
     url: str
-    format: str  # "domains" (one per line) or "hosts" ("0.0.0.0 domain")
+    # "domains" (one per line), "hosts" ("0.0.0.0 domain") or "jsonl"
+    # (one JSON object per line with a "domain" field).
+    format: str
     licence: str
     commercial_use: bool
     redistribution: bool
@@ -36,6 +38,9 @@ class Provider:
     attribution: str = ''
     false_positive_url: str = ''
     enabled: bool = True
+    # jsonl only: keep entries whose field value is in the list, for example
+    # {"threat_type": ["related-phishing"]}.
+    include: dict = dataclasses.field(default_factory=dict)
 
     def check_permitted(self):
         if not (self.commercial_use and self.redistribution and self.evidence):
@@ -46,6 +51,14 @@ class Provider:
     def parse(self, text):
         """Yields raw hostnames from the feed text (not yet canonicalised)."""
         for line in text.splitlines():
+            if self.format == 'jsonl':
+                line = line.strip()
+                if not line:
+                    continue
+                entry = json.loads(line)
+                if all(entry.get(k) in allowed for k, allowed in self.include.items()):
+                    yield entry['domain']
+                continue
             line = line.split('#', 1)[0].strip()
             if not line:
                 continue

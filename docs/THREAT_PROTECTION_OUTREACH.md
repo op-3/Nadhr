@@ -1,4 +1,11 @@
-# Licence clarification requests (drafts, not sent)
+# Licence clarification requests: CANCELLED
+
+> **Cancelled on 2026-11-27 by owner decision.** Nadhr does not contact feed
+> providers, request permissions, negotiate licences, or buy threat
+> intelligence. Only sources whose published terms already allow the intended
+> use are used; anything ambiguous is excluded. The drafts below were never
+> sent and are kept only as a historical record. Do not act on them.
+
 
 These drafts ask rights holders for permission or clarification. **None has
 been sent.** They go out in the owner's name, so each one needs the owner's
