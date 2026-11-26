@@ -52,7 +52,7 @@ Built-in uBlock Origin 1.77.2 (official MV2 release, SHA-256 pinned):
 ## Not started
 
 Everything else in [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md), including
-layouts, uBlock Origin, the Adaptive Resource Engine, localization, updates,
+layouts, the Adaptive Resource Engine, Arabic/English UI localisation, updates,
 Linux and macOS builds, sync, and all benchmarks.
 
 ## Development machine (2026-11-26)
