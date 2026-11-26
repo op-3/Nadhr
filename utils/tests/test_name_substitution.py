@@ -45,6 +45,13 @@ class ReplaceNameTest(unittest.TestCase):
     def test_localized_product_name(self):
         self.assertEqual(ns.replace_name('تحديث Chromium', 'نظر'), 'تحديث نظر')
 
+    def test_arabic_name_is_stored_in_logical_order(self):
+        # NOON, ZAH, REH: the reading order of نظر. The visually reversed
+        # sequence (REH, ZAH, NOON) would render as a different word.
+        self.assertEqual([hex(ord(c)) for c in ns.ARABIC_PRODUCT], ['0x646', '0x638', '0x631'])
+        self.assertEqual(ns.LOCALIZED_PRODUCT['ar'], ns.ARABIC_PRODUCT)
+        self.assertNotEqual(ns.ARABIC_PRODUCT, 'رظن')
+
 
 class SubstituteXtbTest(unittest.TestCase):
 
