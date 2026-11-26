@@ -55,3 +55,29 @@ download a Chromium tree on this laptop. Full builds run only on GitHub Actions
 (free tier; no paid runners without approval). Verify locally with
 `devutils/validate_patches.py --remote`, `devutils/verify_name_substitution.py`
 and `python -m unittest discover -s utils/tests`.
+
+## Current work and how to resume (updated 2026-11-27)
+
+1. **First Windows CI build.** Builds 45886835192 and 45888715501 failed in
+   stage 1 because clone.py pastes the output path into `.gclient` unescaped.
+   Fixed in bb201e9 by passing the relative `build/src`. Build 45891287269 runs
+   that fix. Check it with `gh run list -R op-3/Nadhr --workflow build-windows.yml`.
+   A full build takes up to 16 chained stages (about 1 to 2 days). Read
+   failures with `gh run view <id> --log-failed`.
+2. **uBlock Origin**: draft PR #2, branch `feature/ublock-origin`. The patches
+   apply but are not compiled. Once main builds, dispatch a branch build:
+   `gh workflow run build-windows.yml --ref feature/ublock-origin`. Merge only
+   after it compiles and a smoke test shows blocking. Open items are listed in
+   KNOWN_LIMITATIONS.md.
+3. **Next priorities** (owner, 2026-11-26): remaining branding (icons, exe
+   name, "Chrome" strings), the three layouts, phishing/malware protection,
+   enterprise policies, performance engine, Arabic RTL.
+
+Pitfalls learned:
+- Git Bash heredocs mangle backslashes and `\n`. Write Python scripts with the
+  Write tool instead.
+- Global `core.autocrlf=true` checks submodule patches out with CRLF.
+  Normalise them before `git apply`; the validator already does.
+- gitiles rate-limits bursts (HTTP 429). Use `devutils/gitiles.py`, which retries.
+- When reproducing a bug offline, reproduce the exact code path. A first "fix"
+  for the clone bug passed a simplified repro and still failed in CI.
