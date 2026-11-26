@@ -280,3 +280,32 @@ jobs:
             echo "Build did not finish within 16 stages."
             exit 1
           fi
+  smoke-test:
+    needs: complete
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: nadhr-windows-x64
+          path: dist
+      - name: Unpack portable build
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem dist -Filter 'nadhr_*_portable.zip' | Select-Object -First 1
+          if (-not $zip) { throw 'Portable zip not found in build artifact' }
+          Expand-Archive $zip.FullName -DestinationPath portable
+          $exe = Get-ChildItem portable -Recurse -Filter chrome.exe | Select-Object -First 1
+          if (-not $exe) { throw 'chrome.exe not found in portable zip' }
+          "NADHR_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
+      - name: Launch smoke test
+        shell: pwsh
+        run: python devutils/smoke_test.py "$env:NADHR_EXE" | Tee-Object smoke-test.txt; exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: smoke-test-evidence
+          path: smoke-test.txt

@@ -8,6 +8,7 @@
 | Patches apply to the pinned release | `devutils/validate_patches.py --remote`, CI `validate` | Nadhr's patches, plus any upstream patch touching the same files, apply in build order to Chromium at the pinned tag |
 | Python sources compile | CI `validate` | build scripts have no syntax errors |
 | Full Windows build | CI `build-windows` | the patched tree compiles and packages (**not yet run successfully**) |
+| Launch smoke test | `devutils/smoke_test.py`, CI `build-windows` → `smoke-test` | the packaged browser starts headless with a fresh profile, loads a page over HTTP, runs JavaScript, and its executable is branded Nadhr. Transcript uploaded as `smoke-test-evidence`. The script was checked against Microsoft Edge as a control: JavaScript check passes, branding check correctly fails. |
 
 ## Test matrix (target)
 
