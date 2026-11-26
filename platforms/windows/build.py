@@ -116,8 +116,10 @@ def prepare_source(args):
         downloads.check_downloads(info, DOWNLOAD_CACHE, None)
         downloads.unpack_downloads(info, DOWNLOAD_CACHE, None, SOURCE_TREE, extractors)
     else:
-        subprocess.run([sys.executable, str(UC / 'utils' / 'clone.py'), '-o', str(SOURCE_TREE),
-                        '-p', 'win64'], check=True)
+        # clone.py pastes the path into the Python-syntax .gclient file unescaped,
+        # so backslashes would become escapes ("\n", "\b"); use forward slashes.
+        subprocess.run([sys.executable, str(UC / 'utils' / 'clone.py'), '-o',
+                        SOURCE_TREE.as_posix(), '-p', 'win64'], check=True)
         # clone.py does not run the 'minibranch' DEPS hook.
         subprocess.run([sys.executable, str(SOURCE_TREE / 'build' / 'util' / 'lastchange.py'),
                         '--minibranch-out',
