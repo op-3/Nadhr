@@ -116,10 +116,14 @@ def prepare_source(args):
         downloads.check_downloads(info, DOWNLOAD_CACHE, None)
         downloads.unpack_downloads(info, DOWNLOAD_CACHE, None, SOURCE_TREE, extractors)
     else:
-        # clone.py pastes the path into the Python-syntax .gclient file unescaped,
-        # so backslashes would become escapes ("\n", "\b"); use forward slashes.
+        # clone.py turns -o into a native Path and pastes str(path) unescaped into
+        # the Python-syntax .gclient file, so an absolute path such as
+        # C:\nadhr\build\src gains "\n" and "\b" escapes (forward slashes do not
+        # help: Path converts them back). A relative path "build\src" has no
+        # escape sequences; this is also what upstream passes.
         subprocess.run([sys.executable, str(UC / 'utils' / 'clone.py'), '-o',
-                        SOURCE_TREE.as_posix(), '-p', 'win64'], check=True)
+                        SOURCE_TREE.relative_to(ROOT).as_posix(), '-p', 'win64'],
+                       cwd=ROOT, check=True)
         # clone.py does not run the 'minibranch' DEPS hook.
         subprocess.run([sys.executable, str(SOURCE_TREE / 'build' / 'util' / 'lastchange.py'),
                         '--minibranch-out',
