@@ -22,10 +22,27 @@ ADMX/ADML templates for Group Policy will be generated from Chromium's
 `policy_templates` during the build, using the Nadhr names and categories, and
 published with each release.
 
+## Built-in uBlock Origin
+
+The bundled uBlock Origin has the extension ID `mhmkochafbhohfaebfieaalahinnplkb`.
+It uses standard Chromium policy mechanisms; no new policy is needed:
+
+- **Configure it** through uBlock Origin's managed storage
+  (`3rdparty` → `extensions` → `mhmkochafbhohfaebfieaalahinnplkb` →
+  `adminSettings`, `toOverwrite`, …), as described in uBlock Origin's
+  "Deploying uBlock Origin" documentation. Internal filter-list mirrors for
+  restricted networks are set the same way.
+- **Turn it off** by blocking that ID explicitly, in `ExtensionInstallBlocklist`
+  or in `ExtensionSettings` with `"installation_mode": "blocked"`. A `*` entry
+  does **not** turn it off, so organisations that block user-installed
+  extensions keep the built-in protection.
+
+Status: implemented on the `feature/ublock-origin` branch, not yet
+runtime-tested.
+
 ## Planned Nadhr-specific policies
 
-Layout lock, performance mode, managed content-blocking lists and the
-uBlock Origin configuration, update channel, update server URL and update
+Layout lock, performance mode, update channel, update server URL and update
 deferral. Each will be added as a regular Chromium policy definition so that
 the existing validation and precedence rules apply.
 

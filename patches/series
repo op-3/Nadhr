@@ -5,3 +5,5 @@ nadhr/ublock/bundle-sources.patch
 nadhr/ublock/load-as-component.patch
 nadhr/ublock/restrict-component-privileges.patch
 nadhr/ublock/component-l10n.patch
+nadhr/ublock/managed-storage-schema.patch
+nadhr/ublock/policy-disable.patch

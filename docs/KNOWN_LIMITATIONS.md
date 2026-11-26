@@ -16,16 +16,19 @@ Every known gap, honestly stated. Remove an entry only when it is fixed and veri
 
 - The patches apply cleanly to the pinned release but **have not been compiled
   or run**. Nothing below has been observed in a running browser.
-- uBlock Origin's zero-byte `web_accessible_resources/empty` resource is
-  expected to fail to load from the resource pak, because `ResourceBundle`
-  treats empty data as missing. Filters using `redirect=empty` may then break
-  the request instead of neutralising it. A narrowly scoped fix is still to be
-  written.
-- Whether enterprise policies can configure it through managed storage
-  (`3rdparty` → `extensions` → `mhmkochafbhohfaebfieaalahinnplkb`) on a
-  component extension is not yet verified.
-- There is no policy yet to turn off the built-in blocker for organisations
-  that use another one.
+- `redirect=empty` (zero-byte resource): Chromium 158 already serves a known,
+  empty component resource as an empty 200 response
+  (`chrome_url_request_util.cc` `GetResource`; a zero-length mojo write returns
+  OK). Helium's global ResourceBundle change is therefore not needed. This is
+  verified by reading source only, not yet at runtime.
+- Enterprise configuration: Chromium reads `storage.managed_schema` from disk,
+  which would drop every policy for a pak-bundled extension.
+  `managed-storage-schema.patch` reads it from the pak. Not yet runtime-tested.
+- Enterprise off switch: block the ID `mhmkochafbhohfaebfieaalahinnplkb`
+  explicitly in `ExtensionInstallBlocklist` or `ExtensionSettings`
+  (`policy-disable.patch`). A `*` wildcard deliberately does not turn it off.
+  When it is blocked at startup it is not loaded; when the policy is removed
+  at runtime it returns after a browser restart. Not yet runtime-tested.
 - uBlock Origin's code updates only with Nadhr releases. Its filter lists
   update themselves over the network (see PRIVACY.md).
 
