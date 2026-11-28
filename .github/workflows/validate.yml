@@ -22,6 +22,10 @@ jobs:
         run: python -m compileall -q devutils platforms utils
       - name: Unit tests
         run: python -m unittest discover -s utils/tests -v
+      - name: Generated build workflows are up to date
+        run: |
+          python devutils/generate_workflows.py
+          git diff --exit-code .github/workflows/build-windows.yml .github/workflows/build-dev.yml
       - name: Name substitution keeps every translation (real Chromium strings)
         run: python devutils/verify_name_substitution.py
       - name: Nadhr patches apply to the pinned Chromium release
@@ -38,3 +42,24 @@ jobs:
         run: python -m pip install -r threat_intel/requirements.txt
       - name: Threat list format, licence gates and signed-update attack tests
         run: python -m unittest discover -s threat_intel/tests -t . -v
+
+  stage-archive:
+    # The build-state archive code on a real Windows runner (minutes, not hours):
+    # catches tool or long-path problems before they cost a full build.
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install stage dependencies
+        run: npm ci
+        working-directory: ./.github/actions/stage
+      - name: Tools on this runner image
+        shell: pwsh
+        run: |
+          zstd --version
+          & C:\Windows\System32\tar.exe --version
+          7z i | Select-Object -First 3
+      - name: Archive round trip (tar+zstd with 7-Zip fallback)
+        run: node selftest.mjs
+        working-directory: ./.github/actions/stage
+        env:
+          GITHUB_ACTIONS: ''

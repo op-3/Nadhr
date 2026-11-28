@@ -20,6 +20,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -34,6 +35,9 @@ import patches  # pylint: disable=wrong-import-position
 import prune_binaries  # pylint: disable=wrong-import-position
 from _common import ENCODING, USE_REGISTRY, ExtractorEnum, get_logger  # pylint: disable=wrong-import-position
 sys.path.pop(0)
+sys.path.insert(0, str(ROOT / 'utils'))
+import tree_state  # pylint: disable=wrong-import-position
+sys.path.pop(0)
 
 BUILD_DIR = ROOT / 'build'
 SOURCE_TREE = BUILD_DIR / 'src'
@@ -41,6 +45,7 @@ DOWNLOAD_CACHE = BUILD_DIR / 'download_cache'
 OUT_DIR = 'out\\Default'
 PATCH_BIN_RELPATH = Path('third_party/git/usr/bin/patch.exe')
 BUILD_TIMEOUT_EXIT_CODE = 124
+SEED_REQUIRED_EXIT_CODE = 3  # tree cannot be updated incrementally: full build needed
 # Leave CI stages enough of their 6 h limit to compress and upload the tree.
 CI_NINJA_TIMEOUT_SECONDS = 3.5 * 60 * 60
 
@@ -162,6 +167,50 @@ def prepare_source(args):
     substitution_list = (UC if args.tarball else UC_WIN) / 'domain_substitution.list'
     domain_substitution.apply_substitution(UC / 'domain_regex.list', substitution_list,
                                            SOURCE_TREE, None)
+    tree_state.write_state(SOURCE_TREE, current_tree_state(args))
+
+
+PATCH_LAYERS = (UC / 'patches', UC_WIN / 'patches', ROOT / 'patches')
+
+
+def current_tree_state(args):
+    """What the prepared tree is made of; see utils/tree_state.py."""
+    base = {
+        'uc-windows-downloads.ini': UC_WIN / 'downloads.ini',
+        'nadhr-downloads.ini': ROOT / 'downloads.ini',
+        'pruning.list': (UC if args.tarball else UC_WIN) / 'pruning.list',
+        'domain_substitution.list': (UC if args.tarball else UC_WIN) / 'domain_substitution.list',
+        'domain_regex.list': UC / 'domain_regex.list',
+        'name_substitution.py': ROOT / 'utils' / 'name_substitution.py',
+        'prepare_ublock.py': ROOT / 'utils' / 'prepare_ublock.py',
+    }
+    base.update({f'resources/ublock/{p.name}': p
+                 for p in sorted((ROOT / 'resources' / 'ublock').glob('*'))})
+    return tree_state.describe(PATCH_LAYERS, {k: v for k, v in base.items() if v.exists()})
+
+
+def resync_source(args):
+    """Brings a restored build tree up to date with the current patches (dev builds)."""
+    changed = tree_state.resync(SOURCE_TREE, PATCH_LAYERS, current_tree_state(args))
+    get_logger().info('Resync: %d files re-patched', len(changed))
+    if not changed:
+        return
+    for rel in changed:
+        get_logger().info('  %s', rel)
+    subprocess.run([sys.executable, str(ROOT / 'utils' / 'name_substitution.py'),
+                    str(SOURCE_TREE)], check=True)
+    full_list = ((UC if args.tarball else UC_WIN) / 'domain_substitution.list').read_text(
+        encoding=ENCODING).splitlines()
+    subset = sorted(set(full_list) & set(changed))
+    if subset:
+        with tempfile.NamedTemporaryFile('w', suffix='.list', delete=False,
+                                         encoding=ENCODING) as tmp:
+            tmp.write('\n'.join(subset) + '\n')
+        try:
+            domain_substitution.apply_substitution(UC / 'domain_regex.list', Path(tmp.name),
+                                                   SOURCE_TREE, None)
+        finally:
+            os.unlink(tmp.name)
 
 
 def prepare_rust_toolchain():
@@ -187,21 +236,55 @@ def prepare_rust_toolchain():
                        check=True)
 
 
+# Development builds: fast incremental compile and link, no release optimisation.
+# Never used for distributed binaries (no PGO/LTO; component build).
+DEV_GN_ARGS = {
+    'is_official_build': 'false',
+    'is_component_build': 'true',
+    'chrome_pgo_phase': '0',
+    'symbol_level': '0',
+    'blink_symbol_level': '0',
+    'v8_symbol_level': '0',
+}
+
+
+def parse_gn_args(text):
+    """Parses the simple `name=value` lines of a flags.gn file, keeping order."""
+    out = {}
+    for line in text.splitlines():
+        line = line.split('#', 1)[0].strip()
+        if line:
+            name, value = line.split('=', 1)
+            out[name.strip()] = value.strip()
+    return out
+
+
+def gn_args(args):
+    flags = parse_gn_args((UC / 'flags.gn').read_text(encoding=ENCODING))
+    flags.update(parse_gn_args((UC_WIN / 'flags.windows.gn').read_text(encoding=ENCODING)))
+    if args.tarball:
+        flags['chrome_pgo_phase'] = '0'  # the tarball ships without PGO profiles
+    if args.dev:
+        flags.update(DEV_GN_ARGS)
+    if args.ci:
+        # Compiles run on every core; links are memory-hungry, so one at a time.
+        flags['concurrent_links'] = '1'
+    return flags
+
+
 def write_gn_args(args):
     out = SOURCE_TREE / 'out' / 'Default'
     out.mkdir(parents=True, exist_ok=True)
-    flags = (UC / 'flags.gn').read_text(encoding=ENCODING) + '\n'
-    flags += (UC_WIN / 'flags.windows.gn').read_text(encoding=ENCODING) + '\n'
-    if args.tarball:
-        flags += 'chrome_pgo_phase=0\n'  # the tarball ships without PGO profiles
+    flags = gn_args(args)
     clang_spec = importlib.util.find_spec('clang')
     if clang_spec is None or not clang_spec.submodule_search_locations:
         raise RuntimeError('Python clang bindings not found: pip install clang')
     libclang = SOURCE_TREE / 'third_party' / 'llvm-build' / 'Release+Asserts' / 'bin' / 'libclang.dll'
     bindings = Path(list(clang_spec.submodule_search_locations)[0]).parent
-    flags += f'v8_metagen_libclang_so="{libclang.resolve().as_posix()}"\n'
-    flags += f'v8_metagen_libclang_bindings_dir="{bindings.resolve().as_posix()}"\n'
-    (out / 'args.gn').write_text(flags, encoding=ENCODING)
+    flags['v8_metagen_libclang_so'] = f'"{libclang.resolve().as_posix()}"'
+    flags['v8_metagen_libclang_bindings_dir'] = f'"{bindings.resolve().as_posix()}"'
+    (out / 'args.gn').write_text(''.join(f'{k}={v}\n' for k, v in flags.items()),
+                                 encoding=ENCODING)
 
 
 def build_crubit():
@@ -233,11 +316,21 @@ def main():
                         help='Resume-friendly mode with a per-stage time budget')
     parser.add_argument('--tarball', action='store_true',
                         help='Use the source tarball instead of a git clone (no PGO)')
+    parser.add_argument('--dev', action='store_true',
+                        help='Development build: component, no PGO/LTO, chrome target only')
+    parser.add_argument('--resync', action='store_true',
+                        help='Update a restored, previously built tree incrementally')
     args = parser.parse_args()
 
     # In --ci mode each phase is skipped when an earlier stage already completed it.
-    resume = args.ci
-    if not (resume and (SOURCE_TREE / 'BUILD.gn').exists()):
+    resume = args.ci or args.resync
+    if args.resync:
+        try:
+            resync_source(args)
+        except tree_state.SeedRequired as exc:
+            get_logger().error('Incremental update impossible: %s', exc)
+            sys.exit(SEED_REQUIRED_EXIT_CODE)
+    elif not (resume and (SOURCE_TREE / 'BUILD.gn').exists()):
         prepare_source(args)
     if not (resume and (SOURCE_TREE / 'third_party/rust-toolchain/INSTALLED_VERSION').exists()):
         prepare_rust_toolchain()
@@ -254,8 +347,8 @@ def main():
     if not (resume and Path('third_party/rust-toolchain/crubit/bin/cc_bindings_from_rs.exe').exists()):
         build_crubit()
 
-    ninja = ['third_party\\ninja\\ninja.exe', '-C', OUT_DIR, 'chrome', 'chromedriver',
-             'mini_installer']
+    targets = ['chrome'] if args.dev else ['chrome', 'chromedriver', 'mini_installer']
+    ninja = ['third_party\\ninja\\ninja.exe', '-C', OUT_DIR, *targets]
     if args.thread_count:
         ninja[1:1] = ['-j', str(args.thread_count)]
     if args.ci:
@@ -264,8 +357,9 @@ def main():
         run_msvc(*ninja)
 
     os.chdir(ROOT)
-    subprocess.run([sys.executable, str(ROOT / 'platforms' / 'windows' / 'package.py')],
-                   check=True)
+    if not args.dev:  # dev builds are tested in place (out/Default/chrome.exe)
+        subprocess.run([sys.executable, str(ROOT / 'platforms' / 'windows' / 'package.py')],
+                       check=True)
 
 
 if __name__ == '__main__':

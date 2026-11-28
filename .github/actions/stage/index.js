@@ -1,23 +1,68 @@
 // Adapted from ungoogled-chromium-windows (BSD-3-Clause).
-// Runs one time-limited build stage. A stage either finishes the build and
-// uploads packages, or hits its time budget and uploads the partial tree so
-// the next stage can resume.
+// Runs one time-limited build stage. A stage either finishes the build, or hits
+// its time budget and uploads the partial tree so the next stage can resume.
 import * as core from '@actions/core';
 import * as io from '@actions/io';
 import * as exec from '@actions/exec';
 import { DefaultArtifactClient } from '@actions/artifact';
 import * as glob from '@actions/glob';
+import * as fs from 'node:fs';
 
 const BUILD_TIMEOUT_EXIT_CODE = 124;
+const SEED_REQUIRED_EXIT_CODE = 3;
 const WORK = 'C:\\nadhr';
-const STATE_ARTIFACT = 'build-state-windows-x64';
-const PACKAGE_ARTIFACT = 'nadhr-windows-x64';
+const BUILD = `${WORK}\\build`;
+const TAR = 'C:\\Windows\\System32\\tar.exe';
+
+async function timed(label, fn) {
+    const start = Date.now();
+    try {
+        return await fn();
+    } finally {
+        console.log(`[timing] ${label}: ${((Date.now() - start) / 60000).toFixed(1)} min`);
+    }
+}
+
+async function haveZstd() {
+    const code = await exec.exec('zstd', ['--version'], {ignoreReturnCode: true, silent: true})
+        .catch(() => 1);
+    return code === 0 && fs.existsSync(TAR);
+}
+
+// Archives BUILD\src. tar + multi-threaded zstd is much faster than 7-Zip zip;
+// 7-Zip is the fallback if zstd/tar is missing or fails.
+export async function archiveTree(outBase) {
+    if (await haveZstd()) {
+        const out = `${outBase}.tar.zst`;
+        const code = await timed('archive (tar+zstd)', () => exec.exec('cmd', ['/c',
+            `"${TAR}" -cf - -C "${BUILD}" src | zstd -T0 -3 -q -f -o "${out}"`],
+            {ignoreReturnCode: true}));
+        if (code === 0) return out;
+        console.log('tar+zstd failed, falling back to 7-Zip');
+        await io.rmRF(out);
+    }
+    const out = `${outBase}.zip`;
+    await timed('archive (7-Zip)', () => exec.exec('7z', ['a', '-tzip', out, `${BUILD}\\src`,
+        '-mx=3', '-mtc=on'], {ignoreReturnCode: true}));
+    return out;
+}
+
+export async function extractTree(archive) {
+    if (archive.endsWith('.tar.zst')) {
+        await timed('extract (zstd+tar)', () => exec.exec('cmd', ['/c',
+            `zstd -d -c -q "${archive}" | "${TAR}" -xf - -C "${BUILD}"`]));
+    } else {
+        await timed('extract (7-Zip)', () => exec.exec('7z', ['x', archive, `-o${BUILD}`, '-y']));
+    }
+    await io.rmRF(archive);
+}
 
 async function uploadWithRetry(artifact, name, files, rootDir, retentionDays) {
     for (let i = 0; i < 5; ++i) {
         try { await artifact.deleteArtifact(name); } catch (e) { /* not there yet */ }
         try {
-            await artifact.uploadArtifact(name, files, rootDir, {retentionDays, compressionLevel: 0});
+            await timed(`upload ${name}`, () => artifact.uploadArtifact(name, files, rootDir,
+                {retentionDays, compressionLevel: 0}));
             return;
         } catch (e) {
             console.error(`Upload of ${name} failed: ${e}`);
@@ -31,7 +76,11 @@ async function run() {
     process.on('SIGINT', () => {});  // ninja is interrupted, not this process
     const finished = core.getBooleanInput('finished', {required: true});
     const fromArtifact = core.getBooleanInput('from_artifact', {required: true});
-    console.log(`finished: ${finished}, from_artifact: ${fromArtifact}`);
+    const mode = core.getInput('mode') || 'release';
+    const jobs = core.getInput('jobs') || '4';
+    const stateArtifact = `build-state-windows-x64-${mode}`;
+    console.log(`finished: ${finished}, from_artifact: ${fromArtifact}, mode: ${mode}, jobs: ${jobs}`);
+    core.setOutput('built_here', false);
     if (finished) {
         core.setOutput('finished', true);
         return;
@@ -39,31 +88,50 @@ async function run() {
 
     const artifact = new DefaultArtifactClient();
     if (fromArtifact) {
-        await exec.exec(process.execPath, [`${import.meta.dirname}\\download.js`, STATE_ARTIFACT,
-            `${WORK}\\build`]);
-        await exec.exec('7z', ['x', `${WORK}\\build\\artifacts.zip`, `-o${WORK}\\build`, '-y']);
-        await io.rmRF(`${WORK}\\build\\artifacts.zip`);
+        await timed('download state', () => exec.exec(process.execPath,
+            [`${import.meta.dirname}\\download.js`, stateArtifact, BUILD]));
+        const archive = ['artifacts.tar.zst', 'artifacts.zip'].map(n => `${BUILD}\\${n}`)
+            .find(p => fs.existsSync(p));
+        if (!archive) throw new Error('Downloaded build state contains no archive');
+        await extractTree(archive);
     }
 
     await exec.exec('python', ['-m', 'pip', 'install', 'httplib2==0.22.0', 'clang==21.1.7'],
         {cwd: WORK});
-    const retCode = await exec.exec('python', ['platforms\\windows\\build.py', '--ci', '-j', '2'],
-        {cwd: WORK, ignoreReturnCode: true});
+    const args = ['platforms\\windows\\build.py', '--ci', '-j', jobs];
+    if (mode === 'dev') {
+        args.push('--dev');
+        if (fs.existsSync(`${BUILD}\\src\\.nadhr-tree-state.json`)) args.push('--resync');
+    }
+    const retCode = await timed('build.py', () => exec.exec('python', args,
+        {cwd: WORK, ignoreReturnCode: true}));
 
     if (retCode === 0) {
         core.setOutput('finished', true);
-        const globber = await glob.create(`${WORK}\\build\\dist\\nadhr_*`, {matchDirectories: false});
-        await uploadWithRetry(artifact, PACKAGE_ARTIFACT, await globber.glob(),
-            `${WORK}\\build\\dist`, 14);
+        core.setOutput('built_here', true);
+        if (mode === 'dev' && core.getBooleanInput('publish_tree')) {
+            // Base for later incremental dev builds (main only; one copy, short-lived).
+            const archive = await archiveTree(`${WORK}\\dev-tree`);
+            await uploadWithRetry(artifact, 'dev-tree', [archive], WORK, 7);
+        }
+        if (mode === 'release') {
+            const globber = await glob.create(`${BUILD}\\dist\\nadhr_*`, {matchDirectories: false});
+            await uploadWithRetry(artifact, 'nadhr-windows-x64', await globber.glob(),
+                `${BUILD}\\dist`, 14);
+        }
     } else if (retCode === BUILD_TIMEOUT_EXIT_CODE) {
         await new Promise(r => setTimeout(r, 5000));
-        await exec.exec('7z', ['a', '-tzip', `${WORK}\\artifacts.zip`, `${WORK}\\build\\src`,
-            '-mx=3', '-mtc=on'], {ignoreReturnCode: true});
-        await uploadWithRetry(artifact, STATE_ARTIFACT, [`${WORK}\\artifacts.zip`], WORK, 2);
+        const archive = await archiveTree(`${WORK}\\artifacts`);
+        await uploadWithRetry(artifact, stateArtifact, [archive], WORK, 2);
         core.setOutput('finished', false);
+    } else if (retCode === SEED_REQUIRED_EXIT_CODE) {
+        throw new Error('The restored dev tree cannot be updated incrementally (see log). ' +
+                        'Run build-dev with seed=true.');
     } else {
         throw new Error(`Build failed with exit code ${retCode}`);
     }
 }
 
-run().catch(err => core.setFailed(err.message));
+if (process.env.GITHUB_ACTIONS) {
+    run().catch(err => core.setFailed(err.message));
+}

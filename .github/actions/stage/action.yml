@@ -7,9 +7,23 @@ inputs:
   from_artifact:
     description: True when an earlier stage uploaded a partial build to resume
     required: true
+  mode:
+    description: release (official, packaged) or dev (component build, incremental)
+    required: false
+    default: release
+  jobs:
+    description: Parallel compile jobs (runners have 4 vCPUs; links are limited to 1)
+    required: false
+    default: '4'
+  publish_tree:
+    description: dev mode, when the build finishes - upload the tree as the base for incremental builds
+    required: false
+    default: 'false'
 outputs:
   finished:
     description: Whether the build is complete after this stage
+  built_here:
+    description: True only in the stage that completed the build (the browser exists on this runner)
 runs:
   using: node24
   main: index.js
