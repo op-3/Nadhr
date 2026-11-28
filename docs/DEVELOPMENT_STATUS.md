@@ -37,7 +37,7 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 | Default filter lists limited to licence-approved ones | 1. implemented and tested | PR #2 |
 | Global phishing coverage with permitted sources | **inadequate**: the permitted set is mainly Poland-targeted (see THREAT_PROTECTION.md, Limits) | n/a |
 | Windows build pipeline (x64) | 4. working: run 45891287269 passed all 16 stages, packaging (installer + portable zip, 337 MB artifact) and the smoke test. Builds 1 and 2 had failed in stage 1 (clone path bug, fixed in bb201e9). | main |
-| Fast development build workflow (incremental resync, dev component build, -j 4, zstd hand-off, setup skipping) | 2. implemented and tested: 8 resync tests; Windows runner self-test of the tar\|zstd archive (420-character path, identical round trip; run 46138846614). The first dev seed attempt (46138914484) failed in the component-build link; switched to a static link; seed 46168333592 is running. No timings yet. | main |
+| Fast development build workflow (incremental resync, non-official static dev build, -j 4, zstd hand-off, setup skipping) | 2. implemented and tested: 8 resync tests; Windows runner self-test of the tar\|zstd archive (420-character path, identical round trip; run 46138846614). The first dev seed attempt (46138914484) failed in the component-build link; switched to a static link; seed 46168333592 is running. No timings yet. | main |
 | Layouts, design system, onboarding, New Tab, screenshot tool, performance engine, updater, Linux, macOS | not started | n/a |
 
 ## Done and verified
