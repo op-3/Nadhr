@@ -7,6 +7,8 @@ import * as exec from '@actions/exec';
 import { DefaultArtifactClient } from '@actions/artifact';
 import * as glob from '@actions/glob';
 import * as fs from 'node:fs';
+import { spawn } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 const BUILD_TIMEOUT_EXIT_CODE = 124;
 const SEED_REQUIRED_EXIT_CODE = 3;
@@ -29,16 +31,30 @@ async function haveZstd() {
     return code === 0 && fs.existsSync(TAR);
 }
 
-// Archives BUILD\src. tar + multi-threaded zstd is much faster than 7-Zip zip;
-// 7-Zip is the fallback if zstd/tar is missing or fails.
+// Runs `producer | consumer` with Node streams (no shell, so no quoting issues).
+// Resolves true only if both processes exit with 0.
+function pipe(producer, consumer) {
+    return new Promise(resolve => {
+        const a = spawn(producer[0], producer.slice(1), {stdio: ['ignore', 'pipe', 'inherit']});
+        const b = spawn(consumer[0], consumer.slice(1), {stdio: ['pipe', 'inherit', 'inherit']});
+        a.stdout.pipe(b.stdin);
+        let pending = 2, ok = true;
+        const done = code => { ok = ok && code === 0; if (--pending === 0) resolve(ok); };
+        a.on('error', () => done(1)).on('close', done);
+        b.on('error', () => done(1)).on('close', done);
+    });
+}
+
+// Archives BUILD\src. tar piped into multi-threaded zstd is much faster than
+// 7-Zip zip (the runner's bsdtar has no built-in zstd, so the zstd tool is
+// used). 7-Zip is the fallback if zstd/tar is missing or fails.
 export async function archiveTree(outBase) {
     if (await haveZstd()) {
         const out = `${outBase}.tar.zst`;
-        const code = await timed('archive (tar+zstd)', () => exec.exec('cmd', ['/c',
-            `"${TAR}" -cf - -C "${BUILD}" src | zstd -T0 -3 -q -f -o "${out}"`],
-            {ignoreReturnCode: true}));
-        if (code === 0) return out;
-        console.log('tar+zstd failed, falling back to 7-Zip');
+        const ok = await timed('archive (tar|zstd)', () => pipe(
+            [TAR, '-cf', '-', '-C', BUILD, 'src'], ['zstd', '-T0', '-3', '-q', '-f', '-o', out]));
+        if (ok) return out;
+        console.log('tar|zstd failed, falling back to 7-Zip');
         await io.rmRF(out);
     }
     const out = `${outBase}.zip`;
@@ -49,8 +65,10 @@ export async function archiveTree(outBase) {
 
 export async function extractTree(archive) {
     if (archive.endsWith('.tar.zst')) {
-        await timed('extract (zstd+tar)', () => exec.exec('cmd', ['/c',
-            `zstd -d -c -q "${archive}" | "${TAR}" -xf - -C "${BUILD}"`]));
+        fs.mkdirSync(BUILD, {recursive: true});
+        const ok = await timed('extract (zstd|tar)', () => pipe(
+            ['zstd', '-d', '-c', '-q', archive], [TAR, '-xf', '-', '-C', BUILD]));
+        if (!ok) throw new Error(`Could not extract ${archive}`);
     } else {
         await timed('extract (7-Zip)', () => exec.exec('7z', ['x', archive, `-o${BUILD}`, '-y']));
     }
@@ -132,6 +150,7 @@ async function run() {
     }
 }
 
-if (process.env.GITHUB_ACTIONS) {
+// Run only as the action's entry point, not when imported (selftest, restore step).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     run().catch(err => core.setFailed(err.message));
 }
