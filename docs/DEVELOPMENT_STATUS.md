@@ -37,7 +37,7 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 | Default filter lists limited to licence-approved ones | 1. implemented and tested | PR #2 |
 | Global phishing coverage with permitted sources | **inadequate**: the permitted set is mainly Poland-targeted (see THREAT_PROTECTION.md, Limits) | n/a |
 | Windows build pipeline (x64) | 4. working: run 45891287269 passed all 16 stages, packaging (installer + portable zip, 337 MB artifact) and the smoke test. Builds 1 and 2 had failed in stage 1 (clone path bug, fixed in bb201e9). | main |
-| Fast development build workflow (incremental resync, dev component build, -j 4, zstd hand-off, setup skipping) | 2. implemented and tested: 8 resync tests; Windows runner self-test of the tar\|zstd archive (420-character path, identical round trip; run 46138846614). The first real dev build (46138914484) is running; no timings yet. | main |
+| Fast development build workflow (incremental resync, dev component build, -j 4, zstd hand-off, setup skipping) | 2. implemented and tested: 8 resync tests; Windows runner self-test of the tar\|zstd archive (420-character path, identical round trip; run 46138846614). The first dev seed attempt (46138914484) failed in the component-build link; switched to a static link; seed 46168333592 is running. No timings yet. | main |
 | Layouts, design system, onboarding, New Tab, screenshot tool, performance engine, updater, Linux, macOS | not started | n/a |
 
 ## Done and verified
@@ -57,12 +57,22 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 
 ## In progress
 
-- uBlock Origin integration build (PR #2): run 46136614194 from 230a89a,
-  with the smoke test's blocking and default-profile checks. PR #2 merges
-  only if those pass.
-- Dev seed build on main: run 46138914484 (first `build-dev.yml` run,
-  `seed=true`). It produces the `dev-tree` that incremental dev builds start
-  from, and gives the first measurements of `-j 4` and the zstd hand-off.
+- **uBlock Origin integration build (PR #2), run 46136614194:** stage 1
+  passed (2026-11-28). In a real Chromium tree:
+  - uBlock Origin 1.77.2 was downloaded and SHA-256 verified;
+  - the ID `mhmkochafbhohfaebfieaalahinnplkb` was injected;
+  - the licence policy was applied (9 lists default-eligible, 38 off);
+  - all patches applied and GN accepted the new targets (58,807 build steps,
+    against 58,138 on main);
+  - name substitution changed 516 files.
+
+  Stage 1 compiled 16,195 of 58,807 steps in 3.5 h at `-j 2` (this branch
+  still uses the old workflow). Compile, packaging and the runtime smoke test
+  (blocking, default profile) are still to come. PR #2 merges only if they pass.
+- **Dev seed build on main, run 46168333592.** The first attempt
+  (46138914484) failed after 42 min, linking `absl.dll` in a component build
+  (undefined `CordRepBtree::AddEdge<1>`). Dev builds now use the static link
+  model of the working release build (6196ef4).
 
 ## Owner decisions
 

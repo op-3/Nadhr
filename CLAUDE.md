@@ -68,8 +68,9 @@ and `python -m unittest discover -s utils/tests`.
    build 46136614194 is running.
 2b. **Fast builds** (docs/BUILDING.md, "Four kinds of build"): `build-dev.yml`
    restores the `dev-tree` from the latest successful dev build on main and
-   resyncs patches with `utils/tree_state.py`. Seed run 46138914484 is
-   running. Once it succeeds, use
+   resyncs patches with `utils/tree_state.py`. Seed run 46168333592 is
+   running (the first, 46138914484, failed in a component-build link; dev
+   builds are now static). Once it succeeds, use
    `gh workflow run build-dev.yml --ref <branch>` for native work. Record
    `[timing]` lines from the logs in docs/BUILDING.md. Workflows are
    generated: edit `devutils/generate_workflows.py`, then run it. Merge only
