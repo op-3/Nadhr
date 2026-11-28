@@ -37,7 +37,8 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 | Default filter lists limited to licence-approved ones | 1. implemented and tested | PR #2 |
 | Global phishing coverage with permitted sources | **inadequate**: the permitted set is mainly Poland-targeted (see THREAT_PROTECTION.md, Limits) | n/a |
 | Windows build pipeline (x64) | 4. working: run 45891287269 passed all 16 stages, packaging (installer + portable zip, 337 MB artifact) and the smoke test. Builds 1 and 2 had failed in stage 1 (clone path bug, fixed in bb201e9). | main |
-| Layouts, performance engine, onboarding, updater, Linux, macOS | not started | n/a |
+| Fast development build workflow (incremental resync, dev component build, -j 4, zstd hand-off, setup skipping) | 2. implemented and tested: 8 resync tests; Windows runner self-test of the tar\|zstd archive (420-character path, identical round trip; run 46138846614). The first real dev build (46138914484) is running; no timings yet. | main |
+| Layouts, design system, onboarding, New Tab, screenshot tool, performance engine, updater, Linux, macOS | not started | n/a |
 
 ## Done and verified
 
@@ -56,9 +57,12 @@ Each feature is at exactly one level. It moves up only with recorded evidence.
 
 ## In progress
 
-- uBlock Origin branch build (PR #2): run 46136614194 from 230a89a. It
-  includes the smoke test's blocking and default-profile checks. PR #2 merges
+- uBlock Origin integration build (PR #2): run 46136614194 from 230a89a,
+  with the smoke test's blocking and default-profile checks. PR #2 merges
   only if those pass.
+- Dev seed build on main: run 46138914484 (first `build-dev.yml` run,
+  `seed=true`). It produces the `dev-tree` that incremental dev builds start
+  from, and gives the first measurements of `-j 4` and the zstd hand-off.
 
 ## Owner decisions
 

@@ -65,7 +65,14 @@ and `python -m unittest discover -s utils/tests`.
    A full build takes up to 16 chained stages (about 1 to 2 days). Read
    failures with `gh run view <id> --log-failed`.
 2. **uBlock Origin**: draft PR #2, branch `feature/ublock-origin`. Branch
-   build 46136614194 is running. Merge only
+   build 46136614194 is running.
+2b. **Fast builds** (docs/BUILDING.md, "Four kinds of build"): `build-dev.yml`
+   restores the `dev-tree` from the latest successful dev build on main and
+   resyncs patches with `utils/tree_state.py`. Seed run 46138914484 is
+   running. Once it succeeds, use
+   `gh workflow run build-dev.yml --ref <branch>` for native work. Record
+   `[timing]` lines from the logs in docs/BUILDING.md. Workflows are
+   generated: edit `devutils/generate_workflows.py`, then run it. Merge only
    after it compiles and a smoke test shows blocking. Open items are listed in
    KNOWN_LIMITATIONS.md.
 3. **Next priorities** (owner, 2026-11-26): remaining branding (icons, exe
