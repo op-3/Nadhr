@@ -58,15 +58,14 @@ and `python -m unittest discover -s utils/tests`.
 
 ## Current work and how to resume (updated 2026-11-27)
 
-1. **First Windows CI build.** Builds 45886835192 and 45888715501 failed in
-   stage 1 because clone.py pastes the output path into `.gclient` unescaped.
-   Fixed in bb201e9 by passing the relative `build/src`. Build 45891287269 runs
-   that fix. Check it with `gh run list -R op-3/Nadhr --workflow build-windows.yml`.
+1. **First Windows CI build: done.** Run 45891287269 (bb201e9) passed all 16
+   stages and the smoke test (JS runs, executable branded Nadhr). Earlier runs
+   failed on the clone path bug, fixed in bb201e9. When a run finishes, delete
+   its `build-state-windows-x64` artifact (about 18 GB) to save storage. Check it with `gh run list -R op-3/Nadhr --workflow build-windows.yml`.
    A full build takes up to 16 chained stages (about 1 to 2 days). Read
    failures with `gh run view <id> --log-failed`.
-2. **uBlock Origin**: draft PR #2, branch `feature/ublock-origin`. The patches
-   apply but are not compiled. Once main builds, dispatch a branch build:
-   `gh workflow run build-windows.yml --ref feature/ublock-origin`. Merge only
+2. **uBlock Origin**: draft PR #2, branch `feature/ublock-origin`. Branch
+   build 46136614194 is running. Merge only
    after it compiles and a smoke test shows blocking. Open items are listed in
    KNOWN_LIMITATIONS.md.
 3. **Next priorities** (owner, 2026-11-26): remaining branding (icons, exe
