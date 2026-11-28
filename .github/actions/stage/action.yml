@@ -8,7 +8,7 @@ inputs:
     description: True when an earlier stage uploaded a partial build to resume
     required: true
   mode:
-    description: release (official, packaged) or dev (component build, incremental)
+    description: release (official, packaged) or dev (non-official, incremental)
     required: false
     default: release
   jobs:

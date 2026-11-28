@@ -64,7 +64,7 @@ that file, not the YAML. CI checks that they are in sync.
 | Kind | Workflow | Use it for | What it does |
 |---|---|---|---|
 | **Fast validation** | `validate.yml` (every push and PR) | docs, patches, strings, policies, Python and CI tooling | patch application against pinned Chromium, translation-safe branding, unit tests, threat-list tests, build-state archive round trip on Windows. Minutes. |
-| **Development** | `build-dev.yml`, manual | iterating on native changes | component build, no PGO/LTO, `chrome` target only. Restores the latest dev tree built on `main`, re-patches only the files whose patches changed (`utils/tree_state.py`), recompiles only what depends on them, and smoke-tests the browser in place. `seed=true` builds a dev tree from scratch. |
+| **Development** | `build-dev.yml`, manual | iterating on native changes | non-official build (no PGO, ThinLTO or symbols), `chrome` target only. Restores the latest dev tree built on `main`, re-patches only the files whose patches changed (`utils/tree_state.py`), recompiles only what depends on them, and smoke-tests the browser in place. `seed=true` builds a dev tree from scratch. |
 | **Integration** | `build-windows.yml` on a branch, manual | testing an assembled feature before merging (for example PR #2) | the full official build, packaged and smoke-tested |
 | **Release** | `build-windows.yml` on a `v*` tag | distributable binaries | as integration, plus release checks ([RELEASE.md](RELEASE.md)) |
 

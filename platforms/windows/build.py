@@ -237,10 +237,13 @@ def prepare_rust_toolchain():
 
 
 # Development builds: fast incremental compile and link, no release optimisation.
-# Never used for distributed binaries (no PGO/LTO; component build).
+# Never used for distributed binaries (no PGO/LTO). Not a component build: with
+# ungoogled-chromium's stock LLVM, the component build failed to link absl.dll
+# (undefined CordRepBtree::AddEdge<1>; build-dev run 46138914484), while the
+# static link model is the one the working release build uses.
 DEV_GN_ARGS = {
     'is_official_build': 'false',
-    'is_component_build': 'true',
+    'is_component_build': 'false',
     'chrome_pgo_phase': '0',
     'symbol_level': '0',
     'blink_symbol_level': '0',
@@ -317,7 +320,7 @@ def main():
     parser.add_argument('--tarball', action='store_true',
                         help='Use the source tarball instead of a git clone (no PGO)')
     parser.add_argument('--dev', action='store_true',
-                        help='Development build: component, no PGO/LTO, chrome target only')
+                        help='Development build: non-official, no PGO/LTO, chrome target only')
     parser.add_argument('--resync', action='store_true',
                         help='Update a restored, previously built tree incrementally')
     args = parser.parse_args()
